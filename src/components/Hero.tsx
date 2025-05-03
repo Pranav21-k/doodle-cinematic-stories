@@ -14,21 +14,18 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full overflow-hidden">
-      {/* Video Background */}
+      {/* Times Square Background Image */}
       <div className="absolute inset-0 w-full h-full">
-        <video 
-          ref={videoRef}
-          autoPlay 
-          muted 
-          loop 
-          playsInline
-          className="w-full h-full object-cover"
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')",
+            backgroundPosition: "center",
+          }}
         >
-          {/* Replace with your actual video URL */}
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-heights-in-a-sunset-26070-large.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <div className="video-bg-overlay"></div>
+          {/* You can replace with a GIF by changing the URL above to a GIF URL */}
+        </div>
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
       </div>
 
       {/* Hero Content */}
