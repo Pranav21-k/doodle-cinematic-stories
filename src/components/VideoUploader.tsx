@@ -4,13 +4,21 @@ import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/sonner';
 
 type VideoUploaderProps = {
   onVideoUploaded?: (file: File, previewUrl: string) => void;
   className?: string;
+  buttonText?: string;
+  showPreview?: boolean;
 };
 
-const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
+const VideoUploader = ({ 
+  onVideoUploaded, 
+  className, 
+  buttonText = "Upload Video", 
+  showPreview = true 
+}: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -45,7 +53,14 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
   const handleVideoFile = (file: File) => {
     // Check if the file is a video
     if (!file.type.startsWith('video/')) {
-      alert('Please upload a video file.');
+      toast.error('Please upload a video file.');
+      return;
+    }
+
+    // Check file size (limited to 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Video file is too large. Please upload a file smaller than 100MB.');
       return;
     }
 
@@ -63,6 +78,7 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
         // Create a URL for the video preview
         const previewUrl = URL.createObjectURL(file);
         setVideoPreview(previewUrl);
+        toast.success('Video uploaded successfully!');
         
         // Call the callback if provided
         if (onVideoUploaded) {
@@ -70,6 +86,11 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
         }
       }
     }, 300);
+  };
+
+  const resetUploader = () => {
+    setVideoPreview(null);
+    setUploadProgress(0);
   };
 
   return (
@@ -85,7 +106,7 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
             ${isDragging ? 'border-doodle-purple bg-purple-50' : 'border-gray-300'}`}
         >
           <Upload className="w-12 h-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Upload Video</h3>
+          <h3 className="text-lg font-semibold mb-2">{buttonText}</h3>
           <p className="text-sm text-gray-500 text-center mb-4">
             Drag & drop your video here or click to browse
           </p>
@@ -113,7 +134,7 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
             </div>
           )}
         </div>
-      ) : (
+      ) : showPreview ? (
         <div className="relative rounded-lg overflow-hidden">
           <video 
             src={videoPreview} 
@@ -123,12 +144,20 @@ const VideoUploader = ({ onVideoUploaded, className }: VideoUploaderProps) => {
           <Button
             variant="secondary"
             className="absolute bottom-4 right-4"
-            onClick={() => {
-              setVideoPreview(null);
-              setUploadProgress(0);
-            }}
+            onClick={resetUploader}
           >
             Replace Video
+          </Button>
+        </div>
+      ) : (
+        <div className="text-center">
+          <p className="text-green-600 mb-2">Video uploaded successfully!</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetUploader}
+          >
+            Upload Another Video
           </Button>
         </div>
       )}

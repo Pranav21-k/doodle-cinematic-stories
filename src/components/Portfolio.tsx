@@ -1,8 +1,16 @@
 
 import { useState } from 'react';
-import { Play } from 'lucide-react';
+import { Play, Video } from 'lucide-react';
 import VideoUploader from './VideoUploader';
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Portfolio item type
 type Project = {
@@ -12,6 +20,7 @@ type Project = {
   category: string;
   thumbnail: string;
   videoUrl?: string;
+  isUserUploaded?: boolean;
 };
 
 const Portfolio = () => {
@@ -19,7 +28,7 @@ const Portfolio = () => {
   const [showUploader, setShowUploader] = useState(false);
   const [userVideos, setUserVideos] = useState<{file: File, url: string}[]>([]);
   
-  // Sample portfolio projects (replace with your actual projects)
+  // Sample portfolio projects
   const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
@@ -87,12 +96,13 @@ const Portfolio = () => {
     
     // Add to projects
     const newProject = {
-      id: projects.length + 1,
+      id: Date.now(), // Use timestamp for unique ID
       title: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
       client: "Your Upload",
       category: "uploaded",
       thumbnail: previewUrl,
       videoUrl: previewUrl,
+      isUserUploaded: true
     };
     
     setProjects([...projects, newProject]);
@@ -117,20 +127,23 @@ const Portfolio = () => {
         
         {/* Upload Button */}
         <div className="flex justify-center mb-8">
-          <Button
-            onClick={() => setShowUploader(!showUploader)}
-            className="bg-doodle-purple hover:bg-purple-700 text-white"
-          >
-            {showUploader ? 'Cancel Upload' : 'Upload Your Video'} 
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
+              >
+                <Video size={18} />
+                Upload Your Video
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-center text-2xl mb-4">Upload Your Video</DialogTitle>
+              </DialogHeader>
+              <VideoUploader onVideoUploaded={handleVideoUploaded} />
+            </DialogContent>
+          </Dialog>
         </div>
-        
-        {/* Video Uploader */}
-        {showUploader && (
-          <div className="mb-12 max-w-2xl mx-auto">
-            <VideoUploader onVideoUploaded={handleVideoUploaded} />
-          </div>
-        )}
         
         {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
@@ -152,9 +165,9 @@ const Portfolio = () => {
         {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProjects.map((project) => (
-            <div key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in">
+            <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
               {/* Project Thumbnail */}
-              {project.category === 'uploaded' ? (
+              {project.isUserUploaded ? (
                 <video
                   src={project.thumbnail}
                   className="w-full h-full object-cover"
@@ -180,11 +193,34 @@ const Portfolio = () => {
                 <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
                 
                 {/* Play button */}
-                <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                  <Play size={20} />
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
+                      <Play size={20} />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>{project.title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="aspect-video w-full">
+                      {project.isUserUploaded ? (
+                        <video 
+                          src={project.videoUrl} 
+                          controls 
+                          className="w-full h-full object-contain"
+                          autoPlay
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-900 flex items-center justify-center text-white">
+                          <p>Video preview not available</p>
+                        </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
         
