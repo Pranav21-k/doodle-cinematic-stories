@@ -37,7 +37,7 @@ const Navbar = () => {
           <NavLink href="#services">Services</NavLink>
           <NavLink href="#portfolio">Portfolio</NavLink>
           <NavLink href="#contact">Contact</NavLink>
-          <Button className="btn-primary">Get a Quote</Button>
+          <Button className="bg-doodle-purple hover:bg-doodle-purple/90 text-white">Get a Quote</Button>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -57,7 +57,7 @@ const Navbar = () => {
             <MobileNavLink href="#services" onClick={() => setMobileMenuOpen(false)}>Services</MobileNavLink>
             <MobileNavLink href="#portfolio" onClick={() => setMobileMenuOpen(false)}>Portfolio</MobileNavLink>
             <MobileNavLink href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</MobileNavLink>
-            <Button className="btn-primary w-full mt-4">Get a Quote</Button>
+            <Button className="bg-doodle-purple hover:bg-doodle-purple/90 text-white w-full mt-4">Get a Quote</Button>
           </div>
         </div>
       )}
