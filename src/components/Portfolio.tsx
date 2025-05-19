@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, Repeat } from 'lucide-react';
+import { Play, Video, Rotate } from 'lucide-react';
 import VideoUploader from './VideoUploader';
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +35,8 @@ const Portfolio = () => {
   const [showUploader, setShowUploader] = useState(false);
   const [userVideos, setUserVideos] = useState<{file: File, url: string}[]>([]);
   const [isAdmin, setIsAdmin] = useState(true); // In a real app, you would check if the current user is an admin
-  const [isAutoplay, setIsAutoplay] = useState(false);
+  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   
@@ -90,14 +92,21 @@ const Portfolio = () => {
     },
   ]);
 
+  // Get only user uploaded videos for the carousel
+  const userUploadedVideos = projects.filter(project => project.isUserUploaded);
+
   // Start or stop autoplay
   useEffect(() => {
-    if (isAutoplay) {
+    if (isAutoplay && userUploadedVideos.length > 1) {
       const interval = setInterval(() => {
-        if (carouselRef.current && carouselRef.current.scrollNext) {
-          carouselRef.current.scrollNext();
-        }
-      }, 5000); // Change slide every 5 seconds
+        setActiveVideoIndex(prevIndex => {
+          const nextIndex = (prevIndex + 1) % userUploadedVideos.length;
+          if (carouselRef.current && carouselRef.current.scrollTo) {
+            carouselRef.current.scrollTo(nextIndex);
+          }
+          return nextIndex;
+        });
+      }, 8000); // Change video every 8 seconds
       
       setAutoplayInterval(interval);
       return () => clearInterval(interval);
@@ -105,7 +114,7 @@ const Portfolio = () => {
       clearInterval(autoplayInterval);
       setAutoplayInterval(null);
     }
-  }, [isAutoplay]);
+  }, [isAutoplay, userUploadedVideos.length]);
 
   const handleVideoUploaded = (file: File, previewUrl: string) => {
     const newVideo = { file, url: previewUrl };
@@ -130,9 +139,6 @@ const Portfolio = () => {
   const filteredProjects = activeFilter === 'all'
     ? projects
     : projects.filter(project => project.category === activeFilter);
-
-  // Get only user uploaded videos for the carousel
-  const userUploadedVideos = projects.filter(project => project.isUserUploaded);
 
   return (
     <section id="portfolio" className="section-padding bg-white">
@@ -167,56 +173,73 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Video Carousel - Only shows if there are uploaded videos */}
+        {/* Immersive Video Carousel - New Style */}
         {userUploadedVideos.length > 0 && (
-          <div className="mb-16">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Featured Videos</h3>
+          <div className="mb-16 relative">
+            {/* Autoplay Toggle */}
+            <div className="flex justify-end mb-4">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsAutoplay(!isAutoplay)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 z-10"
               >
-                <Repeat size={16} />
-                {isAutoplay ? 'Stop Autoplay' : 'Start Autoplay'}
+                <Rotate size={16} />
+                {isAutoplay ? 'Stop Rotation' : 'Start Rotation'}
               </Button>
             </div>
             
-            <Carousel
-              className="w-full"
-              ref={carouselRef}
-            >
-              <CarouselContent>
-                {userUploadedVideos.map((project) => (
-                  <CarouselItem key={`carousel-${project.id}`} className="md:basis-1/2 lg:basis-1/3">
-                    <div className="p-1">
-                      <Card className="overflow-hidden rounded-lg">
-                        <CardContent className="p-0 aspect-video">
-                          <video
-                            src={project.videoUrl}
-                            className="w-full h-full object-cover"
-                            muted
-                            loop
-                            autoPlay={isAutoplay}
-                            controls={!isAutoplay}
-                          />
-                        </CardContent>
-                        <div className="p-4">
-                          <h4 className="font-semibold">{project.title}</h4>
-                        </div>
-                      </Card>
+            {/* Main Feature Video */}
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-4 shadow-xl">
+              <video
+                key={`feature-${activeVideoIndex}`}
+                src={userUploadedVideos[activeVideoIndex]?.videoUrl}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
+                <div className="p-6">
+                  <h3 className="text-white text-2xl font-bold">
+                    {userUploadedVideos[activeVideoIndex]?.title}
+                  </h3>
+                  <p className="text-white/80">
+                    {userUploadedVideos[activeVideoIndex]?.client}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Background Video Carousel */}
+            <div className="relative -mt-16 pb-8 z-0">
+              <div className="overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex space-x-4">
+                  {userUploadedVideos.map((video, index) => (
+                    <div 
+                      key={`bg-${video.id}`}
+                      className={`flex-shrink-0 w-36 h-24 rounded-md overflow-hidden cursor-pointer transition-all duration-300
+                        ${index === activeVideoIndex ? 'ring-2 ring-doodle-purple scale-110' : 'opacity-70 scale-90'}`}
+                      onClick={() => {
+                        setActiveVideoIndex(index);
+                        if (carouselRef.current && carouselRef.current.scrollTo) {
+                          carouselRef.current.scrollTo(index);
+                        }
+                      }}
+                    >
+                      <video 
+                        src={video.videoUrl} 
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay={isAutoplay}
+                      />
                     </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {userUploadedVideos.length > 1 && (
-                <>
-                  <CarouselPrevious />
-                  <CarouselNext />
-                </>
-              )}
-            </Carousel>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
         
@@ -329,6 +352,17 @@ const Portfolio = () => {
           </button>
         </div>
       </div>
+      
+      {/* Add custom styling for scrollbar hiding */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </section>
   );
 };

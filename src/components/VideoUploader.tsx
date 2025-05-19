@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ type VideoUploaderProps = {
   className?: string;
   buttonText?: string;
   showPreview?: boolean;
-  adminOnly?: boolean; // New prop to control admin-only access
+  adminOnly?: boolean; // Prop to control admin-only access
 };
 
 const VideoUploader = ({ 
@@ -19,14 +18,13 @@ const VideoUploader = ({
   className, 
   buttonText = "Upload Video", 
   showPreview = true,
-  adminOnly = false // Default to false for backwards compatibility
+  adminOnly = true // Default to true - only admins can upload
 }: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   // In a real app, you would check if the current user is an admin
-  // For now, we'll use a simple prop to control this
   const [isAdmin, setIsAdmin] = useState(true); // Default to true for testing
 
   // Don't render the component if it's admin-only and the user is not an admin
