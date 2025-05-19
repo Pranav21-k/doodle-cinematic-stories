@@ -27,7 +27,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
         <Link to="/" className="flex items-center">
           <span className="text-white font-bold text-xl md:text-2xl">
-            doodle-cinematic-stories
+            Doodle<span className="text-doodle-purple">Production</span>
           </span>
         </Link>
 
