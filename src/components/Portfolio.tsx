@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, Rotate3D } from 'lucide-react';
-import VideoUploader from './VideoUploader';
+import { Play, Video } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import {
@@ -29,20 +28,16 @@ type Project = {
   category: string;
   thumbnail: string;
   videoUrl?: string;
-  isUserUploaded?: boolean;
 };
 
 const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
-  const [showUploader, setShowUploader] = useState(false);
-  const [userVideos, setUserVideos] = useState<{file: File, url: string}[]>([]);
-  const [isAdmin, setIsAdmin] = useState(true); // In a real app, you would check if the current user is an admin
-  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   
-  // Sample portfolio projects with real video URLs for testing
+  // Sample portfolio projects with real video URLs
   const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
@@ -51,7 +46,6 @@ const Portfolio = () => {
       category: "commercial",
       thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      isUserUploaded: true,
     },
     {
       id: 2,
@@ -60,7 +54,6 @@ const Portfolio = () => {
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-      isUserUploaded: true,
     },
     {
       id: 3,
@@ -69,7 +62,6 @@ const Portfolio = () => {
       category: "corporate",
       thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-      isUserUploaded: true,
     },
     {
       id: 4,
@@ -78,7 +70,6 @@ const Portfolio = () => {
       category: "social",
       thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      isUserUploaded: true,
     },
     {
       id: 5,
@@ -87,19 +78,18 @@ const Portfolio = () => {
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-      isUserUploaded: true,
     }
   ]);
 
-  // Get only user uploaded videos for the carousel
-  const userUploadedVideos = projects.filter(project => project.isUserUploaded);
+  // Get videos for the carousel
+  const showcaseVideos = projects;
 
   // Start or stop autoplay
   useEffect(() => {
-    if (isAutoplay && userUploadedVideos.length > 1) {
+    if (isAutoplay && showcaseVideos.length > 1) {
       const interval = setInterval(() => {
         setActiveVideoIndex(prevIndex => {
-          const nextIndex = (prevIndex + 1) % userUploadedVideos.length;
+          const nextIndex = (prevIndex + 1) % showcaseVideos.length;
           return nextIndex;
         });
       }, 8000); // Change video every 8 seconds
@@ -110,46 +100,7 @@ const Portfolio = () => {
       clearInterval(autoplayInterval);
       setAutoplayInterval(null);
     }
-  }, [isAutoplay, userUploadedVideos.length]);
-
-  const handleVideoUploaded = (file: File, previewUrl: string) => {
-    const newVideo = { file, url: previewUrl };
-    setUserVideos(prev => [...prev, newVideo]);
-    
-    // Add to projects
-    const newProject = {
-      id: Date.now(), // Use timestamp for unique ID
-      title: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-      client: "Your Upload",
-      category: "uploaded",
-      thumbnail: previewUrl,
-      videoUrl: previewUrl,
-      isUserUploaded: true
-    };
-    
-    setProjects(prev => [...prev, newProject]);
-    setShowUploader(false);
-    toast.success("Video uploaded successfully!");
-  };
-
-  // Handle multiple video uploads
-  const handleVideosUploaded = (videos: {file: File, url: string}[]) => {
-    setUserVideos(prev => [...prev, ...videos]);
-    
-    // Add all videos to projects
-    const newProjects = videos.map(video => ({
-      id: Date.now() + Math.random() * 1000, // Use timestamp plus random for unique ID
-      title: video.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-      client: "Your Upload",
-      category: "uploaded",
-      thumbnail: video.url,
-      videoUrl: video.url,
-      isUserUploaded: true
-    }));
-    
-    setProjects(prev => [...prev, ...newProjects]);
-    toast.success(`${videos.length} videos uploaded successfully!`);
-  };
+  }, [isAutoplay, showcaseVideos.length]);
 
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
@@ -167,38 +118,8 @@ const Portfolio = () => {
           </p>
         </div>
         
-        {/* Upload Button - Only visible to admins */}
-        {isAdmin && (
-          <div className="flex justify-center mb-8">
-            <Dialog open={showUploader} onOpenChange={setShowUploader}>
-              <DialogTrigger asChild>
-                <Button
-                  className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
-                >
-                  <Video size={18} />
-                  Upload Your Videos
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-center text-2xl mb-4">Upload Your Videos</DialogTitle>
-                  <DialogDescription className="text-center">
-                    Upload multiple videos at once to see them in the immersive carousel
-                  </DialogDescription>
-                </DialogHeader>
-                <VideoUploader 
-                  onVideoUploaded={handleVideoUploaded} 
-                  onVideosUploaded={handleVideosUploaded}
-                  multiple={true}
-                  buttonText="Select Multiple Videos"
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
-        
         {/* Immersive Video Carousel - Enhanced Style */}
-        {userUploadedVideos.length > 0 && (
+        {showcaseVideos.length > 0 && (
           <div className="mb-16 relative">
             {/* Autoplay Toggle */}
             <div className="flex justify-end mb-4">
@@ -208,17 +129,17 @@ const Portfolio = () => {
                 onClick={() => setIsAutoplay(!isAutoplay)}
                 className="flex items-center gap-2 z-10"
               >
-                <Rotate3D size={16} />
+                <Video size={16} />
                 {isAutoplay ? 'Stop Rotation' : 'Start Rotation'}
               </Button>
             </div>
             
             {/* Main Feature Video */}
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
-              {userUploadedVideos[activeVideoIndex] && (
+              {showcaseVideos[activeVideoIndex] && (
                 <video
                   key={`feature-${activeVideoIndex}`}
-                  src={userUploadedVideos[activeVideoIndex]?.videoUrl}
+                  src={showcaseVideos[activeVideoIndex]?.videoUrl}
                   className="w-full h-full object-cover"
                   autoPlay
                   muted
@@ -229,10 +150,10 @@ const Portfolio = () => {
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
                 <div className="p-6">
                   <h3 className="text-white text-2xl font-bold">
-                    {userUploadedVideos[activeVideoIndex]?.title}
+                    {showcaseVideos[activeVideoIndex]?.title}
                   </h3>
                   <p className="text-white/80">
-                    {userUploadedVideos[activeVideoIndex]?.client}
+                    {showcaseVideos[activeVideoIndex]?.client}
                   </p>
                 </div>
               </div>
@@ -241,7 +162,7 @@ const Portfolio = () => {
             {/* Horizontally Scrolling Video Thumbnails */}
             <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
               <div className="flex space-x-6 px-4">
-                {userUploadedVideos.map((video, index) => (
+                {showcaseVideos.map((video, index) => (
                   <div 
                     key={`thumb-${video.id}`}
                     className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
@@ -316,18 +237,6 @@ const Portfolio = () => {
               </button>
             );
           })}
-          {userUploadedVideos.length > 0 && (
-            <button
-              onClick={() => setActiveFilter('uploaded')}
-              className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                activeFilter === 'uploaded' 
-                  ? 'bg-doodle-purple text-white' 
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              Your Uploads
-            </button>
-          )}
         </div>
         
         {/* Portfolio Grid */}
@@ -335,26 +244,18 @@ const Portfolio = () => {
           {filteredProjects.map((project) => (
             <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
               {/* Project Thumbnail */}
-              {project.isUserUploaded ? (
-                <video
-                  src={project.videoUrl}
-                  className="w-full h-full object-cover"
-                  muted
-                  loop
-                  onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                  onMouseOut={(e) => {
-                    const video = e.target as HTMLVideoElement;
-                    video.pause();
-                    video.currentTime = 0;
-                  }}
-                />
-              ) : (
-                <img
-                  src={project.thumbnail}
-                  alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-              )}
+              <video
+                src={project.videoUrl}
+                className="w-full h-full object-cover"
+                muted
+                loop
+                onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                onMouseOut={(e) => {
+                  const video = e.target as HTMLVideoElement;
+                  video.pause();
+                  video.currentTime = 0;
+                }}
+              />
               
               {/* Overlay with information */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -373,18 +274,12 @@ const Portfolio = () => {
                       <DialogTitle>{project.title}</DialogTitle>
                     </DialogHeader>
                     <div className="aspect-video w-full">
-                      {project.isUserUploaded ? (
-                        <video 
-                          src={project.videoUrl} 
-                          controls 
-                          className="w-full h-full object-contain"
-                          autoPlay
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-900 flex items-center justify-center text-white">
-                          <p>Video preview not available</p>
-                        </div>
-                      )}
+                      <video 
+                        src={project.videoUrl} 
+                        controls 
+                        className="w-full h-full object-contain"
+                        autoPlay
+                      />
                     </div>
                   </DialogContent>
                 </Dialog>
