@@ -1,6 +1,8 @@
 
 import { useState } from 'react';
 import { Play } from 'lucide-react';
+import VideoUploader from './VideoUploader';
+import { Button } from "@/components/ui/button";
 
 // Portfolio item type
 type Project = {
@@ -14,9 +16,11 @@ type Project = {
 
 const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showUploader, setShowUploader] = useState(false);
+  const [userVideos, setUserVideos] = useState<{file: File, url: string}[]>([]);
   
   // Sample portfolio projects (replace with your actual projects)
-  const projects: Project[] = [
+  const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
       title: "Brand Story Campaign",
@@ -65,7 +69,7 @@ const Portfolio = () => {
       thumbnail: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
       videoUrl: "https://example.com/video6",
     },
-  ];
+  ]);
 
   // Filter categories
   const categories = [
@@ -74,7 +78,26 @@ const Portfolio = () => {
     { id: 'brand', name: 'Brand Films' },
     { id: 'corporate', name: 'Corporate' },
     { id: 'social', name: 'Social Media' },
+    { id: 'uploaded', name: 'Your Uploads' },
   ];
+
+  const handleVideoUploaded = (file: File, previewUrl: string) => {
+    const newVideo = { file, url: previewUrl };
+    setUserVideos([...userVideos, newVideo]);
+    
+    // Add to projects
+    const newProject = {
+      id: projects.length + 1,
+      title: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+      client: "Your Upload",
+      category: "uploaded",
+      thumbnail: previewUrl,
+      videoUrl: previewUrl,
+    };
+    
+    setProjects([...projects, newProject]);
+    setShowUploader(false);
+  };
 
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
@@ -91,6 +114,23 @@ const Portfolio = () => {
             Showcasing our best work and creative capabilities across industries.
           </p>
         </div>
+        
+        {/* Upload Button */}
+        <div className="flex justify-center mb-8">
+          <Button
+            onClick={() => setShowUploader(!showUploader)}
+            className="bg-doodle-purple hover:bg-purple-700 text-white"
+          >
+            {showUploader ? 'Cancel Upload' : 'Upload Your Video'} 
+          </Button>
+        </div>
+        
+        {/* Video Uploader */}
+        {showUploader && (
+          <div className="mb-12 max-w-2xl mx-auto">
+            <VideoUploader onVideoUploaded={handleVideoUploaded} />
+          </div>
+        )}
         
         {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
@@ -114,11 +154,25 @@ const Portfolio = () => {
           {filteredProjects.map((project) => (
             <div key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in">
               {/* Project Thumbnail */}
-              <img
-                src={project.thumbnail}
-                alt={project.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
+              {project.category === 'uploaded' ? (
+                <video
+                  src={project.thumbnail}
+                  className="w-full h-full object-cover"
+                  muted
+                  onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                  onMouseOut={(e) => {
+                    const video = e.target as HTMLVideoElement;
+                    video.pause();
+                    video.currentTime = 0;
+                  }}
+                />
+              ) : (
+                <img
+                  src={project.thumbnail}
+                  alt={project.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              )}
               
               {/* Overlay with information */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
