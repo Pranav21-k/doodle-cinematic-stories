@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -158,7 +159,7 @@ const VideoUploader = ({
           onVideosUploaded(newPreviews);
         }
       }
-    }, 300);
+    }, 200); // Speed up upload simulation a bit
   };
 
   const resetUploader = () => {
@@ -222,7 +223,7 @@ const VideoUploader = ({
           )}
           
           {videoPreviews.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
               {videoPreviews.map((video, index) => (
                 <div key={index} className="relative rounded-lg overflow-hidden">
                   <video 

@@ -88,16 +88,7 @@ const Portfolio = () => {
       thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
       videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
       isUserUploaded: true, // Mark as user uploaded for testing
-    },
-    {
-      id: 6,
-      title: "Event Coverage",
-      client: "Summit Conference",
-      category: "corporate",
-      thumbnail: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
-    },
+    }
   ]);
 
   // Get only user uploaded videos for the carousel
@@ -193,7 +184,7 @@ const Portfolio = () => {
                 <DialogHeader>
                   <DialogTitle className="text-center text-2xl mb-4">Upload Your Videos</DialogTitle>
                   <DialogDescription className="text-center">
-                    Upload multiple videos at once to see them in the flow carousel
+                    Upload multiple videos at once to see them in the immersive carousel
                   </DialogDescription>
                 </DialogHeader>
                 <VideoUploader 
@@ -224,7 +215,7 @@ const Portfolio = () => {
             </div>
             
             {/* Main Feature Video */}
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-4 shadow-xl">
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
               <video
                 key={`feature-${activeVideoIndex}`}
                 src={userUploadedVideos[activeVideoIndex]?.videoUrl}
@@ -246,41 +237,47 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Background Video Flow - Enhanced with 3D rotation */}
-            <div className="relative -mt-16 pb-8 z-0">
-              <div className="overflow-x-auto pb-8 scrollbar-hide">
-                <div className="flex space-x-4 px-4">
-                  {userUploadedVideos.map((video, index) => (
-                    <div 
-                      key={`bg-${video.id}`}
-                      className={`flex-shrink-0 w-40 h-28 rounded-md overflow-hidden cursor-pointer transition-all duration-500 ease-out transform
-                        ${index === activeVideoIndex 
-                          ? 'ring-2 ring-doodle-purple scale-110 z-10' 
-                          : 'opacity-70 hover:opacity-90'
-                        }
-                        ${index % 2 === 0 ? 'rotate-1' : '-rotate-1'}
-                        ${index === activeVideoIndex - 1 || index === activeVideoIndex + 1 
-                          ? 'translate-y-2' 
+            {/* Horizontally Scrolling Video Thumbnails */}
+            <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
+              <div className="flex space-x-6 px-4">
+                {userUploadedVideos.map((video, index) => (
+                  <div 
+                    key={`thumb-${video.id}`}
+                    className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
+                      shadow-lg transition-all duration-500 ease-out transform
+                      ${index === activeVideoIndex 
+                        ? 'ring-4 ring-doodle-purple scale-110 z-10' 
+                        : 'opacity-70 hover:opacity-90'
+                      }
+                      ${index % 2 === 0 ? 'rotate-2' : '-rotate-2'}
+                      ${index === activeVideoIndex - 1 || index === activeVideoIndex + 1 
+                        ? 'translate-y-3' 
+                        : index === activeVideoIndex - 2 || index === activeVideoIndex + 2
+                          ? 'translate-y-4' 
                           : 'translate-y-0'
-                        }
-                      `}
-                      onClick={() => {
-                        setActiveVideoIndex(index);
-                      }}
-                      style={{
-                        transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                      }}
-                    >
-                      <video 
-                        src={video.videoUrl} 
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        autoPlay={true}
-                      />
+                      }
+                    `}
+                    onClick={() => {
+                      setActiveVideoIndex(index);
+                    }}
+                    style={{
+                      transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    }}
+                  >
+                    <video 
+                      src={video.videoUrl} 
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay={true}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
+                      <div className="p-3">
+                        <p className="text-white text-sm font-bold truncate">{video.title}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -399,10 +396,10 @@ const Portfolio = () => {
       {/* Add custom styling for scrollbar hiding */}
       <style>
         {`
-        .scrollbar-hide::-webkit-scrollbar {
+        .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
-        .scrollbar-hide {
+        .no-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
