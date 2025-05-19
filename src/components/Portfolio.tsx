@@ -40,15 +40,16 @@ const Portfolio = () => {
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   
-  // Sample portfolio projects
+  // Sample portfolio projects with real video URLs for testing
   const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
       title: "Brand Story Campaign",
       client: "TechVision",
       category: "commercial",
-      thumbnail: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-      videoUrl: "https://example.com/video1",
+      thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
     {
       id: 2,
@@ -56,7 +57,8 @@ const Portfolio = () => {
       client: "Innovate Sports",
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-      videoUrl: "https://example.com/video2",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
     {
       id: 3,
@@ -64,7 +66,8 @@ const Portfolio = () => {
       client: "Global Finance",
       category: "corporate",
       thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      videoUrl: "https://example.com/video3",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
     {
       id: 4,
@@ -72,7 +75,8 @@ const Portfolio = () => {
       client: "Fashion Forward",
       category: "social",
       thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-      videoUrl: "https://example.com/video4",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
     {
       id: 5,
@@ -80,7 +84,8 @@ const Portfolio = () => {
       client: "FitnessPro",
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-      videoUrl: "https://example.com/video5",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
     {
       id: 6,
@@ -88,7 +93,8 @@ const Portfolio = () => {
       client: "Summit Conference",
       category: "corporate",
       thumbnail: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-      videoUrl: "https://example.com/video6",
+      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      isUserUploaded: true, // Mark as user uploaded for testing
     },
   ]);
 
@@ -101,9 +107,6 @@ const Portfolio = () => {
       const interval = setInterval(() => {
         setActiveVideoIndex(prevIndex => {
           const nextIndex = (prevIndex + 1) % userUploadedVideos.length;
-          if (carouselRef.current && carouselRef.current.scrollTo) {
-            carouselRef.current.scrollTo(nextIndex);
-          }
           return nextIndex;
         });
       }, 8000); // Change video every 8 seconds
@@ -173,7 +176,7 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Immersive Video Carousel - New Style */}
+        {/* Immersive Video Carousel - Enhanced Style */}
         {userUploadedVideos.length > 0 && (
           <div className="mb-16 relative">
             {/* Autoplay Toggle */}
@@ -212,20 +215,29 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Background Video Carousel */}
+            {/* Background Video Flow - Enhanced with 3D rotation */}
             <div className="relative -mt-16 pb-8 z-0">
-              <div className="overflow-x-auto pb-4 scrollbar-hide">
-                <div className="flex space-x-4">
+              <div className="overflow-x-auto pb-8 scrollbar-hide">
+                <div className="flex space-x-4 px-4">
                   {userUploadedVideos.map((video, index) => (
                     <div 
                       key={`bg-${video.id}`}
-                      className={`flex-shrink-0 w-36 h-24 rounded-md overflow-hidden cursor-pointer transition-all duration-300
-                        ${index === activeVideoIndex ? 'ring-2 ring-doodle-purple scale-110' : 'opacity-70 scale-90'}`}
+                      className={`flex-shrink-0 w-40 h-28 rounded-md overflow-hidden cursor-pointer transition-all duration-500 ease-out transform
+                        ${index === activeVideoIndex 
+                          ? 'ring-2 ring-doodle-purple scale-110 z-10' 
+                          : 'opacity-70 hover:opacity-90'
+                        }
+                        ${index % 2 === 0 ? 'rotate-1' : '-rotate-1'}
+                        ${index === activeVideoIndex - 1 || index === activeVideoIndex + 1 
+                          ? 'translate-y-2' 
+                          : 'translate-y-0'
+                        }
+                      `}
                       onClick={() => {
                         setActiveVideoIndex(index);
-                        if (carouselRef.current && carouselRef.current.scrollTo) {
-                          carouselRef.current.scrollTo(index);
-                        }
+                      }}
+                      style={{
+                        transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                       }}
                     >
                       <video 
@@ -233,7 +245,7 @@ const Portfolio = () => {
                         className="w-full h-full object-cover"
                         muted
                         loop
-                        autoPlay={isAutoplay}
+                        autoPlay={true}
                       />
                     </div>
                   ))}
@@ -289,7 +301,7 @@ const Portfolio = () => {
               {/* Project Thumbnail */}
               {project.isUserUploaded ? (
                 <video
-                  src={project.thumbnail}
+                  src={project.videoUrl}
                   className="w-full h-full object-cover"
                   muted
                   loop
