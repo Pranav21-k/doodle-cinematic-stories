@@ -151,7 +151,7 @@ const VideoUploader = ({
           url: URL.createObjectURL(file)
         }));
         
-        setVideoPreviews([...videoPreviews, ...newPreviews]);
+        setVideoPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
         toast.success(`${validFiles.length} video(s) uploaded successfully!`);
         
         // Call the callback if provided
@@ -212,7 +212,7 @@ const VideoUploader = ({
         </div>
       ) : showPreview ? (
         <div className="space-y-4">
-          {videoPreview && (
+          {videoPreview && !multiple && (
             <div className="relative rounded-lg overflow-hidden">
               <video 
                 src={videoPreview} 
@@ -222,7 +222,7 @@ const VideoUploader = ({
             </div>
           )}
           
-          {videoPreviews.length > 0 && (
+          {videoPreviews.length > 0 && multiple && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
               {videoPreviews.map((video, index) => (
                 <div key={index} className="relative rounded-lg overflow-hidden">

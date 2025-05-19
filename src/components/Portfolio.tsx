@@ -50,8 +50,8 @@ const Portfolio = () => {
       client: "TechVision",
       category: "commercial",
       thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      isUserUploaded: true,
     },
     {
       id: 2,
@@ -59,8 +59,8 @@ const Portfolio = () => {
       client: "Innovate Sports",
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      isUserUploaded: true,
     },
     {
       id: 3,
@@ -68,8 +68,8 @@ const Portfolio = () => {
       client: "Global Finance",
       category: "corporate",
       thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      isUserUploaded: true,
     },
     {
       id: 4,
@@ -77,8 +77,8 @@ const Portfolio = () => {
       client: "Fashion Forward",
       category: "social",
       thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      isUserUploaded: true,
     },
     {
       id: 5,
@@ -86,8 +86,8 @@ const Portfolio = () => {
       client: "FitnessPro",
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-      videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      isUserUploaded: true, // Mark as user uploaded for testing
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      isUserUploaded: true,
     }
   ]);
 
@@ -114,7 +114,7 @@ const Portfolio = () => {
 
   const handleVideoUploaded = (file: File, previewUrl: string) => {
     const newVideo = { file, url: previewUrl };
-    setUserVideos([...userVideos, newVideo]);
+    setUserVideos(prev => [...prev, newVideo]);
     
     // Add to projects
     const newProject = {
@@ -127,14 +127,14 @@ const Portfolio = () => {
       isUserUploaded: true
     };
     
-    setProjects([...projects, newProject]);
+    setProjects(prev => [...prev, newProject]);
     setShowUploader(false);
     toast.success("Video uploaded successfully!");
   };
 
   // Handle multiple video uploads
   const handleVideosUploaded = (videos: {file: File, url: string}[]) => {
-    setUserVideos([...userVideos, ...videos]);
+    setUserVideos(prev => [...prev, ...videos]);
     
     // Add all videos to projects
     const newProjects = videos.map(video => ({
@@ -147,8 +147,7 @@ const Portfolio = () => {
       isUserUploaded: true
     }));
     
-    setProjects([...projects, ...newProjects]);
-    setShowUploader(false);
+    setProjects(prev => [...prev, ...newProjects]);
     toast.success(`${videos.length} videos uploaded successfully!`);
   };
 
@@ -171,7 +170,7 @@ const Portfolio = () => {
         {/* Upload Button - Only visible to admins */}
         {isAdmin && (
           <div className="flex justify-center mb-8">
-            <Dialog>
+            <Dialog open={showUploader} onOpenChange={setShowUploader}>
               <DialogTrigger asChild>
                 <Button
                   className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
@@ -216,15 +215,17 @@ const Portfolio = () => {
             
             {/* Main Feature Video */}
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
-              <video
-                key={`feature-${activeVideoIndex}`}
-                src={userUploadedVideos[activeVideoIndex]?.videoUrl}
-                className="w-full h-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-              />
+              {userUploadedVideos[activeVideoIndex] && (
+                <video
+                  key={`feature-${activeVideoIndex}`}
+                  src={userUploadedVideos[activeVideoIndex]?.videoUrl}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
                 <div className="p-6">
                   <h3 className="text-white text-2xl font-bold">
@@ -269,7 +270,14 @@ const Portfolio = () => {
                       className="w-full h-full object-cover"
                       muted
                       loop
-                      autoPlay={true}
+                      autoPlay={index === activeVideoIndex}
+                      onLoadedMetadata={(e) => {
+                        if (index !== activeVideoIndex) {
+                          (e.target as HTMLVideoElement).pause();
+                        } else {
+                          (e.target as HTMLVideoElement).play();
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
                       <div className="p-3">
