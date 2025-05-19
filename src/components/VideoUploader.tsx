@@ -11,18 +11,28 @@ type VideoUploaderProps = {
   className?: string;
   buttonText?: string;
   showPreview?: boolean;
+  adminOnly?: boolean; // New prop to control admin-only access
 };
 
 const VideoUploader = ({ 
   onVideoUploaded, 
   className, 
   buttonText = "Upload Video", 
-  showPreview = true 
+  showPreview = true,
+  adminOnly = false // Default to false for backwards compatibility
 }: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  // In a real app, you would check if the current user is an admin
+  // For now, we'll use a simple prop to control this
+  const [isAdmin, setIsAdmin] = useState(true); // Default to true for testing
+
+  // Don't render the component if it's admin-only and the user is not an admin
+  if (adminOnly && !isAdmin) {
+    return null;
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

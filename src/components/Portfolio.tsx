@@ -1,6 +1,5 @@
-
-import { useState } from 'react';
-import { Play, Video } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Play, Video, Repeat } from 'lucide-react';
 import VideoUploader from './VideoUploader';
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 
 // Portfolio item type
 type Project = {
@@ -27,6 +33,10 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [showUploader, setShowUploader] = useState(false);
   const [userVideos, setUserVideos] = useState<{file: File, url: string}[]>([]);
+  const [isAdmin, setIsAdmin] = useState(true); // In a real app, you would check if the current user is an admin
+  const [isAutoplay, setIsAutoplay] = useState(false);
+  const carouselRef = useRef<any>(null);
+  const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   
   // Sample portfolio projects
   const [projects, setProjects] = useState<Project[]>([
@@ -80,15 +90,22 @@ const Portfolio = () => {
     },
   ]);
 
-  // Filter categories
-  const categories = [
-    { id: 'all', name: 'All Work' },
-    { id: 'commercial', name: 'Commercials' },
-    { id: 'brand', name: 'Brand Films' },
-    { id: 'corporate', name: 'Corporate' },
-    { id: 'social', name: 'Social Media' },
-    { id: 'uploaded', name: 'Your Uploads' },
-  ];
+  // Start or stop autoplay
+  useEffect(() => {
+    if (isAutoplay) {
+      const interval = setInterval(() => {
+        if (carouselRef.current && carouselRef.current.scrollNext) {
+          carouselRef.current.scrollNext();
+        }
+      }, 5000); // Change slide every 5 seconds
+      
+      setAutoplayInterval(interval);
+      return () => clearInterval(interval);
+    } else if (autoplayInterval) {
+      clearInterval(autoplayInterval);
+      setAutoplayInterval(null);
+    }
+  }, [isAutoplay]);
 
   const handleVideoUploaded = (file: File, previewUrl: string) => {
     const newVideo = { file, url: previewUrl };
@@ -114,6 +131,9 @@ const Portfolio = () => {
     ? projects
     : projects.filter(project => project.category === activeFilter);
 
+  // Get only user uploaded videos for the carousel
+  const userUploadedVideos = projects.filter(project => project.isUserUploaded);
+
   return (
     <section id="portfolio" className="section-padding bg-white">
       <div className="container mx-auto px-6 md:px-12">
@@ -125,41 +145,118 @@ const Portfolio = () => {
           </p>
         </div>
         
-        {/* Upload Button */}
-        <div className="flex justify-center mb-8">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
+        {/* Upload Button - Only visible to admins */}
+        {isAdmin && (
+          <div className="flex justify-center mb-8">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
+                >
+                  <Video size={18} />
+                  Upload Your Video
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-center text-2xl mb-4">Upload Your Video</DialogTitle>
+                </DialogHeader>
+                <VideoUploader onVideoUploaded={handleVideoUploaded} />
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+        
+        {/* Video Carousel - Only shows if there are uploaded videos */}
+        {userUploadedVideos.length > 0 && (
+          <div className="mb-16">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold">Featured Videos</h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsAutoplay(!isAutoplay)}
+                className="flex items-center gap-2"
               >
-                <Video size={18} />
-                Upload Your Video
+                <Repeat size={16} />
+                {isAutoplay ? 'Stop Autoplay' : 'Start Autoplay'}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-center text-2xl mb-4">Upload Your Video</DialogTitle>
-              </DialogHeader>
-              <VideoUploader onVideoUploaded={handleVideoUploaded} />
-            </DialogContent>
-          </Dialog>
-        </div>
+            </div>
+            
+            <Carousel
+              className="w-full"
+              ref={carouselRef}
+            >
+              <CarouselContent>
+                {userUploadedVideos.map((project) => (
+                  <CarouselItem key={`carousel-${project.id}`} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-1">
+                      <Card className="overflow-hidden rounded-lg">
+                        <CardContent className="p-0 aspect-video">
+                          <video
+                            src={project.videoUrl}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                            autoPlay={isAutoplay}
+                            controls={!isAutoplay}
+                          />
+                        </CardContent>
+                        <div className="p-4">
+                          <h4 className="font-semibold">{project.title}</h4>
+                        </div>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {userUploadedVideos.length > 1 && (
+                <>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </>
+              )}
+            </Carousel>
+          </div>
+        )}
         
         {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {categories.map(category => (
+          {['all', 'commercial', 'brand', 'corporate', 'social'].map(category => {
+            const displayName = {
+              'all': 'All Work',
+              'commercial': 'Commercials',
+              'brand': 'Brand Films',
+              'corporate': 'Corporate',
+              'social': 'Social Media'
+            }[category];
+            
+            return (
+              <button
+                key={category}
+                onClick={() => setActiveFilter(category)}
+                className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                  activeFilter === category 
+                    ? 'bg-doodle-purple text-white' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {displayName}
+              </button>
+            );
+          })}
+          {userUploadedVideos.length > 0 && (
             <button
-              key={category.id}
-              onClick={() => setActiveFilter(category.id)}
+              onClick={() => setActiveFilter('uploaded')}
               className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                activeFilter === category.id 
+                activeFilter === 'uploaded' 
                   ? 'bg-doodle-purple text-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
-              {category.name}
+              Your Uploads
             </button>
-          ))}
+          )}
         </div>
         
         {/* Portfolio Grid */}
@@ -172,6 +269,7 @@ const Portfolio = () => {
                   src={project.thumbnail}
                   className="w-full h-full object-cover"
                   muted
+                  loop
                   onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                   onMouseOut={(e) => {
                     const video = e.target as HTMLVideoElement;
