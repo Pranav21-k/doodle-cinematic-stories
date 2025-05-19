@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, Rotate } from 'lucide-react';
+import { Play, Video, Rotate3D } from 'lucide-react';
 import VideoUploader from './VideoUploader';
 import { Button } from "@/components/ui/button";
 import {
@@ -184,7 +184,7 @@ const Portfolio = () => {
                 onClick={() => setIsAutoplay(!isAutoplay)}
                 className="flex items-center gap-2 z-10"
               >
-                <Rotate size={16} />
+                <Rotate3D size={16} />
                 {isAutoplay ? 'Stop Rotation' : 'Start Rotation'}
               </Button>
             </div>
@@ -354,7 +354,8 @@ const Portfolio = () => {
       </div>
       
       {/* Add custom styling for scrollbar hiding */}
-      <style jsx>{`
+      <style>
+        {`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
@@ -362,7 +363,8 @@ const Portfolio = () => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-      `}</style>
+        `}
+      </style>
     </section>
   );
 };
