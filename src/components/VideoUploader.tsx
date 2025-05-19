@@ -7,21 +7,26 @@ import { toast } from '@/components/ui/sonner';
 
 type VideoUploaderProps = {
   onVideoUploaded?: (file: File, previewUrl: string) => void;
+  onVideosUploaded?: (files: {file: File, url: string}[]) => void;
   className?: string;
   buttonText?: string;
   showPreview?: boolean;
   adminOnly?: boolean; // Prop to control admin-only access
+  multiple?: boolean; // Allow multiple file uploads
 };
 
 const VideoUploader = ({ 
   onVideoUploaded, 
+  onVideosUploaded,
   className, 
   buttonText = "Upload Video", 
   showPreview = true,
-  adminOnly = true // Default to true - only admins can upload
+  adminOnly = true, // Default to true - only admins can upload
+  multiple = false // Default to single upload
 }: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoPreviews, setVideoPreviews] = useState<{file: File, url: string}[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   // In a real app, you would check if the current user is an admin
@@ -47,14 +52,22 @@ const VideoUploader = ({
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      handleVideoFile(files[0]);
+      if (multiple) {
+        handleMultipleVideoFiles(Array.from(files));
+      } else {
+        handleVideoFile(files[0]);
+      }
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      handleVideoFile(files[0]);
+      if (multiple) {
+        handleMultipleVideoFiles(Array.from(files));
+      } else {
+        handleVideoFile(files[0]);
+      }
     }
   };
 
@@ -96,8 +109,61 @@ const VideoUploader = ({
     }, 300);
   };
 
+  const handleMultipleVideoFiles = (files: File[]) => {
+    // Filter only video files
+    const videoFiles = files.filter(file => file.type.startsWith('video/'));
+    
+    if (videoFiles.length === 0) {
+      toast.error('Please upload video files.');
+      return;
+    }
+    
+    // Check file sizes
+    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+    const oversizedFiles = videoFiles.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      toast.error(`${oversizedFiles.length} video(s) exceed the 100MB size limit and will be skipped.`);
+    }
+    
+    // Keep only valid files
+    const validFiles = videoFiles.filter(file => file.size <= maxSize);
+    
+    if (validFiles.length === 0) {
+      return;
+    }
+    
+    // Simulate upload progress
+    setIsUploading(true);
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      
+      if (progress >= 100) {
+        clearInterval(interval);
+        setIsUploading(false);
+        
+        // Create preview URLs for all files
+        const newPreviews = validFiles.map(file => ({
+          file,
+          url: URL.createObjectURL(file)
+        }));
+        
+        setVideoPreviews([...videoPreviews, ...newPreviews]);
+        toast.success(`${validFiles.length} video(s) uploaded successfully!`);
+        
+        // Call the callback if provided
+        if (onVideosUploaded) {
+          onVideosUploaded(newPreviews);
+        }
+      }
+    }, 300);
+  };
+
   const resetUploader = () => {
     setVideoPreview(null);
+    setVideoPreviews([]);
     setUploadProgress(0);
   };
 
@@ -108,7 +174,7 @@ const VideoUploader = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {!videoPreview ? (
+      {(!videoPreview && videoPreviews.length === 0) ? (
         <div 
           className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center transition-colors 
             ${isDragging ? 'border-doodle-purple bg-purple-50' : 'border-gray-300'}`}
@@ -116,7 +182,7 @@ const VideoUploader = ({
           <Upload className="w-12 h-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold mb-2">{buttonText}</h3>
           <p className="text-sm text-gray-500 text-center mb-4">
-            Drag & drop your video here or click to browse
+            {multiple ? 'Select multiple videos or drag & drop them here' : 'Drag & drop your video here or click to browse'}
           </p>
           
           <div className="w-full max-w-xs">
@@ -127,6 +193,7 @@ const VideoUploader = ({
               accept="video/*"
               onChange={handleFileChange}
               className="cursor-pointer"
+              multiple={multiple}
             />
           </div>
           
@@ -143,23 +210,53 @@ const VideoUploader = ({
           )}
         </div>
       ) : showPreview ? (
-        <div className="relative rounded-lg overflow-hidden">
-          <video 
-            src={videoPreview} 
-            controls 
-            className="w-full h-64 object-cover"
-          />
-          <Button
-            variant="secondary"
-            className="absolute bottom-4 right-4"
-            onClick={resetUploader}
-          >
-            Replace Video
-          </Button>
+        <div className="space-y-4">
+          {videoPreview && (
+            <div className="relative rounded-lg overflow-hidden">
+              <video 
+                src={videoPreview} 
+                controls 
+                className="w-full h-64 object-cover"
+              />
+            </div>
+          )}
+          
+          {videoPreviews.length > 0 && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {videoPreviews.map((video, index) => (
+                <div key={index} className="relative rounded-lg overflow-hidden">
+                  <video 
+                    src={video.url} 
+                    muted
+                    className="w-full h-32 object-cover"
+                    onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                    onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
+                  />
+                  <div className="absolute bottom-2 right-2 text-white text-xs bg-black/50 px-2 py-1 rounded">
+                    {video.file.name.substring(0, 15)}...
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="secondary"
+              className="ml-auto"
+              onClick={resetUploader}
+            >
+              Upload More Videos
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="text-center">
-          <p className="text-green-600 mb-2">Video uploaded successfully!</p>
+          <p className="text-green-600 mb-2">
+            {multiple && videoPreviews.length > 0 
+              ? `${videoPreviews.length} videos uploaded successfully!` 
+              : 'Video uploaded successfully!'}
+          </p>
           <Button
             variant="outline"
             size="sm"

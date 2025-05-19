@@ -3,11 +3,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Video, Rotate3D } from 'lucide-react';
 import VideoUploader from './VideoUploader';
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -136,6 +138,27 @@ const Portfolio = () => {
     
     setProjects([...projects, newProject]);
     setShowUploader(false);
+    toast.success("Video uploaded successfully!");
+  };
+
+  // Handle multiple video uploads
+  const handleVideosUploaded = (videos: {file: File, url: string}[]) => {
+    setUserVideos([...userVideos, ...videos]);
+    
+    // Add all videos to projects
+    const newProjects = videos.map(video => ({
+      id: Date.now() + Math.random() * 1000, // Use timestamp plus random for unique ID
+      title: video.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+      client: "Your Upload",
+      category: "uploaded",
+      thumbnail: video.url,
+      videoUrl: video.url,
+      isUserUploaded: true
+    }));
+    
+    setProjects([...projects, ...newProjects]);
+    setShowUploader(false);
+    toast.success(`${videos.length} videos uploaded successfully!`);
   };
 
   // Filter projects based on active filter
@@ -163,14 +186,22 @@ const Portfolio = () => {
                   className="bg-doodle-purple hover:bg-purple-700 text-white flex items-center gap-2"
                 >
                   <Video size={18} />
-                  Upload Your Video
+                  Upload Your Videos
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-center text-2xl mb-4">Upload Your Video</DialogTitle>
+                  <DialogTitle className="text-center text-2xl mb-4">Upload Your Videos</DialogTitle>
+                  <DialogDescription className="text-center">
+                    Upload multiple videos at once to see them in the flow carousel
+                  </DialogDescription>
                 </DialogHeader>
-                <VideoUploader onVideoUploaded={handleVideoUploaded} />
+                <VideoUploader 
+                  onVideoUploaded={handleVideoUploaded} 
+                  onVideosUploaded={handleVideosUploaded}
+                  multiple={true}
+                  buttonText="Select Multiple Videos"
+                />
               </DialogContent>
             </Dialog>
           </div>
