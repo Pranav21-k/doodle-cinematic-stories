@@ -1,13 +1,10 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Upload } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [backgroundType, setBackgroundType] = useState<'image' | 'video'>('image');
-  const [videoBackground, setVideoBackground] = useState<string | null>(null);
-  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -15,54 +12,19 @@ const Hero = () => {
     }
   }, []);
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      // Check if the file is a video
-      if (!files[0].type.startsWith('video/')) {
-        alert('Please upload a video file.');
-        return;
-      }
-      
-      const videoUrl = URL.createObjectURL(files[0]);
-      setVideoBackground(videoUrl);
-      setBackgroundType('video');
-      setIsUploadMenuOpen(false);
-    }
-  };
-
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 w-full h-full">
-        {backgroundType === 'video' && videoBackground ? (
-          <>
-            <video 
-              ref={videoRef}
-              autoPlay 
-              muted 
-              loop 
-              playsInline
-              className="w-full h-full object-cover"
-            >
-              <source src={videoBackground} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          </>
-        ) : (
-          <>
-            <div 
-              className="w-full h-full bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: "url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')",
-                backgroundPosition: "center",
-              }}
-            >
-            </div>
-            <div className="absolute inset-0 bg-black bg-opacity-60"></div>
-          </>
-        )}
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')",
+            backgroundPosition: "center",
+          }}
+        >
+        </div>
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
       </div>
 
       {/* Hero Content */}
@@ -85,43 +47,6 @@ const Hero = () => {
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* Background Upload Option */}
-      <div className="absolute top-4 right-4 z-20">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setIsUploadMenuOpen(!isUploadMenuOpen)}
-          className="bg-black/40 text-white border-white/30 hover:bg-black/60"
-        >
-          <Upload size={16} className="mr-1" /> Change Background
-        </Button>
-        
-        {isUploadMenuOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-            <div className="py-1" role="menu" aria-orientation="vertical">
-              <label className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                Upload Video Background
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={() => {
-                  setBackgroundType('image');
-                  setIsUploadMenuOpen(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Use Default Background
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Scroll Indicator */}
