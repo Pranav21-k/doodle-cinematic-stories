@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, BadgeCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -339,34 +338,32 @@ const Portfolio = () => {
         {/* Filter Buttons - only show if there are videos or admin is logged in */}
         {(projects.length > 0 || isAdmin) && (
           <div className="flex flex-wrap justify-center mb-12 gap-2">
-            {['all', 'commercial', 'brand', 'corporate', 'social', 'uploads'].map(category => {
+            {[
+              { id: 'all', label: 'All Work' },
+              { id: 'fashion', label: 'Fashion & Modeling' },
+              { id: 'fitness', label: 'Fitness & Training' },
+              { id: 'events', label: 'Events & Nightlife' },
+              { id: 'brand', label: 'Brand Collaborations' },
+              { id: 'uploads', label: 'Your Uploads' }
+            ].map(category => {
               // Don't show "uploads" category if there are no uploaded videos and user is not admin
-              if (category === 'uploads' && 
+              if (category.id === 'uploads' && 
                   !projects.some(p => p.category === 'uploads') && 
                   !isAdmin) {
                 return null;
               }
               
-              const displayName = {
-                'all': 'All Work',
-                'commercial': 'Commercials',
-                'brand': 'Brand Films',
-                'corporate': 'Corporate',
-                'social': 'Social Media',
-                'uploads': 'Your Uploads'
-              }[category];
-              
               return (
                 <button
-                  key={category}
-                  onClick={() => setActiveFilter(category)}
+                  key={category.id}
+                  onClick={() => setActiveFilter(category.id)}
                   className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                    activeFilter === category 
+                    activeFilter === category.id 
                       ? 'bg-doodle-purple text-white' 
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  {displayName}
+                  {category.label}
                 </button>
               );
             })}
