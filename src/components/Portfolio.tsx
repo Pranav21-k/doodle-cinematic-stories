@@ -360,6 +360,52 @@ const Portfolio = () => {
     video.title.toLowerCase().includes('snapinsta') || video.category === 'snapinsta'
   ).length;
 
+  // Fix: Force video play when thumbnail is visible by adding a useEffect
+  useEffect(() => {
+    const playVisibleVideos = () => {
+      // Play the main feature video if it exists
+      if (showcaseVideos.length > 0) {
+        const mainVideo = document.querySelector('.feature-video') as HTMLVideoElement;
+        if (mainVideo) {
+          mainVideo.play().catch(err => console.log('Autoplay prevented:', err));
+        }
+      }
+      
+      // Make sure all thumbnail videos are set to play
+      const thumbnailVideos = document.querySelectorAll('.thumbnail-video') as NodeListOf<HTMLVideoElement>;
+      thumbnailVideos.forEach((video, index) => {
+        if (index === activeVideoIndex) {
+          video.play().catch(err => console.log('Thumbnail autoplay prevented:', err));
+        } else {
+          video.pause();
+          video.currentTime = 0;
+        }
+      });
+    };
+    
+    // Play videos when they're initially loaded or when the active index changes
+    playVisibleVideos();
+    
+    // Also set up an intersection observer to play videos when they become visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.target instanceof HTMLVideoElement) {
+          entry.target.play().catch(err => console.log('Observer autoplay prevented:', err));
+        } else if (entry.target instanceof HTMLVideoElement) {
+          entry.target.pause();
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    // Observe all video elements in the portfolio section
+    const allVideos = document.querySelectorAll('.card-video') as NodeListOf<HTMLVideoElement>;
+    allVideos.forEach(video => observer.observe(video));
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, [showcaseVideos, activeVideoIndex]);
+
   return (
     <section id="portfolio" className="section-padding bg-white">
       <div className="container mx-auto px-6 md:px-12">
@@ -492,6 +538,9 @@ const Portfolio = () => {
                               src={project.videoUrl}
                               className="w-full h-full object-cover"
                               muted
+                              playsInline
+                              loop
+                              autoPlay
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-doodle-purple/30 flex items-center justify-center">
@@ -567,9 +616,9 @@ const Portfolio = () => {
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
               {showcaseVideos[activeVideoIndex] && (
                 <video
-                  key={`feature-${activeVideoIndex}`}
+                  key={`feature-${showcaseVideos[activeVideoIndex]?.id}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover feature-video"
                   autoPlay
                   muted
                   loop
@@ -617,17 +666,11 @@ const Portfolio = () => {
                   >
                     <video 
                       src={video.videoUrl} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover thumbnail-video"
                       muted
                       loop
+                      playsInline
                       autoPlay={index === activeVideoIndex}
-                      onLoadedMetadata={(e) => {
-                        if (index !== activeVideoIndex) {
-                          (e.target as HTMLVideoElement).pause();
-                        } else {
-                          (e.target as HTMLVideoElement).play();
-                        }
-                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
                       <div className="p-3">
@@ -691,9 +734,11 @@ const Portfolio = () => {
                         {/* Project Thumbnail */}
                         <video
                           src={project.videoUrl}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover card-video"
                           muted
                           loop
+                          playsInline
+                          preload="auto"
                           onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                           onMouseOut={(e) => {
                             const video = e.target as HTMLVideoElement;
@@ -725,6 +770,7 @@ const Portfolio = () => {
                                     controls 
                                     className="w-full h-full object-contain"
                                     autoPlay
+                                    playsInline
                                   />
                                 </div>
                               </DialogContent>
