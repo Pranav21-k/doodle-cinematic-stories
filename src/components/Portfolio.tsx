@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Video, Upload, BadgeCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,8 @@ const Portfolio = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const backgroundVideoRef1 = useRef<HTMLVideoElement>(null);
+  const backgroundVideoRef2 = useRef<HTMLVideoElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   
   // Sample portfolio projects with videos that match the Lemonlight style
@@ -114,13 +117,51 @@ const Portfolio = () => {
     setIsUploadDialogOpen(false);
   };
 
+  // Start background videos and ensure they loop continuously
+  useEffect(() => {
+    const playBackgroundVideos = () => {
+      if (backgroundVideoRef1.current) {
+        backgroundVideoRef1.current.play().catch(e => console.log("Auto-play prevented:", e));
+        backgroundVideoRef1.current.muted = true;
+      }
+      if (backgroundVideoRef2.current) {
+        backgroundVideoRef2.current.play().catch(e => console.log("Auto-play prevented:", e));
+        backgroundVideoRef2.current.muted = true;
+      }
+    };
+    
+    playBackgroundVideos();
+    
+    // Set up video event listeners to ensure continuous playback
+    const setupVideoLoop = (video: HTMLVideoElement | null) => {
+      if (video) {
+        video.addEventListener('ended', () => {
+          video.currentTime = 0;
+          video.play().catch(e => console.log("Auto-play prevented:", e));
+        });
+      }
+    };
+    
+    setupVideoLoop(backgroundVideoRef1.current);
+    setupVideoLoop(backgroundVideoRef2.current);
+    
+    return () => {
+      if (backgroundVideoRef1.current) {
+        backgroundVideoRef1.current.removeEventListener('ended', () => {});
+      }
+      if (backgroundVideoRef2.current) {
+        backgroundVideoRef2.current.removeEventListener('ended', () => {});
+      }
+    };
+  }, []);
+
   // Play all videos automatically
   useEffect(() => {
     // Set up the intersection observer to play videos when visible
     const options = {
       root: null,
       rootMargin: '0px',
-      threshold: 0.5
+      threshold: 0.1  // Lower threshold to start playback earlier
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -151,6 +192,23 @@ const Portfolio = () => {
     };
   }, [projects]);
 
+  // Force videos to play after component loads
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      videoRefs.current.forEach(video => {
+        if (video) {
+          video.play().catch(e => console.log("Auto-play prevented:", e));
+        }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.play().catch(e => console.log("Auto-play prevented:", e));
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+
   // Get videos for the carousel
   const showcaseVideos = projects;
 
@@ -173,8 +231,31 @@ const Portfolio = () => {
     : projects.filter(project => project.category === activeFilter);
 
   return (
-    <section id="portfolio" className="section-padding bg-black text-white py-24">
-      <div className="container mx-auto px-6 md:px-12">
+    <section id="portfolio" className="section-padding bg-black text-white py-24 relative overflow-hidden">
+      {/* Background video layers */}
+      <div className="absolute inset-0 overflow-hidden opacity-20 z-0">
+        <video 
+          ref={backgroundVideoRef1}
+          src={projects[0]?.videoUrl} 
+          className="absolute top-0 left-0 w-full h-full object-cover scale-110 transform rotate-3"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        <video 
+          ref={backgroundVideoRef2}
+          src={projects[1]?.videoUrl} 
+          className="absolute top-0 left-0 w-full h-full object-cover scale-125 transform -rotate-2"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+      </div>
+      
+      <div className="container mx-auto px-6 md:px-12 relative z-10">
         {/* Section Header with Lemonlight-inspired styles */}
         <div className="text-center mb-16">
           <h2 className="section-title animate-fade-in">Our Work</h2>
@@ -219,7 +300,7 @@ const Portfolio = () => {
             </div>
             
             {/* Video Grid with hover effects and 3D transform */}
-            <div className="mb-12">
+            <div className="mb-12 relative">
               {/* Filter Buttons - Lemonlight style */}
               <div className="flex flex-wrap justify-center mb-12 gap-4">
                 {[
@@ -265,6 +346,7 @@ const Portfolio = () => {
                           preload="metadata"
                           muted
                           loop
+                          autoPlay
                           playsInline
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
