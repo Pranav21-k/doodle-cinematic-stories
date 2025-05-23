@@ -106,17 +106,24 @@ const Portfolio = () => {
   useEffect(() => {
     if (projects.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      console.log('Videos saved to localStorage:', projects.length);
     }
   }, [projects]);
 
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
+    // Format the title by removing "New Upload:" prefix and file extension
+    let title = file.name;
+    if (title.includes('.')) {
+      title = title.split('.')[0];
+    }
+    
     // Create a new project with the uploaded video
     const newProject: Project = {
-      id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
-      title: "New Upload: " + file.name.split('.')[0],
+      id: Date.now(), // Use timestamp for more unique IDs
+      title: title,
       client: "Your Project",
-      category: uploadCategory, // Use selected category instead of hardcoded "fashion"
+      category: uploadCategory,
       thumbnail: previewUrl,
       videoUrl: previewUrl,
       featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
@@ -126,10 +133,11 @@ const Portfolio = () => {
     const updatedProjects = [newProject, ...projects];
     setProjects(updatedProjects);
     
-    // Save to local storage
+    // Ensure we save to local storage immediately after upload
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+    console.log('New video saved:', title);
     
-    toast.success(`Video uploaded successfully to ${categories.find(c => c.id === uploadCategory)?.name || uploadCategory}!`);
+    toast.success(`Video "${title}" uploaded and saved successfully!`);
     setIsUploadDialogOpen(false);
   };
 
@@ -237,6 +245,70 @@ const Portfolio = () => {
     });
   };
 
+  // Export all videos to a downloadable JSON file
+  const exportVideos = () => {
+    if (projects.length === 0) {
+      toast.error("No videos to export");
+      return;
+    }
+    
+    try {
+      const dataStr = JSON.stringify(projects, null, 2);
+      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+      
+      const exportFileDefaultName = `portfolio_videos_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      toast.success(`${projects.length} videos exported successfully`);
+    } catch (error) {
+      console.error('Failed to export videos', error);
+      toast.error("Failed to export videos");
+    }
+  };
+
+  // Import videos from a JSON file
+  const importVideos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedProjects = JSON.parse(event.target?.result as string);
+        
+        if (!Array.isArray(importedProjects)) {
+          throw new Error("Invalid format: Expected an array");
+        }
+        
+        // Basic validation to ensure we have the right format
+        if (importedProjects.some(p => !p.title || !p.videoUrl)) {
+          throw new Error("Invalid format: Missing required fields");
+        }
+        
+        // Merge with existing videos, avoiding duplicates by ID
+        const existingIds = projects.map(p => p.id);
+        const newProjects = importedProjects.filter(p => !existingIds.includes(p.id));
+        const mergedProjects = [...projects, ...newProjects];
+        
+        setProjects(mergedProjects);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedProjects));
+        toast.success(`${newProjects.length} videos imported successfully`);
+      } catch (error) {
+        console.error('Failed to import videos', error);
+        toast.error("Failed to import videos: Invalid format");
+      }
+      
+      // Reset the input
+      e.target.value = '';
+    };
+    
+    reader.readAsText(file);
+  };
+
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
     ? projects
@@ -253,7 +325,7 @@ const Portfolio = () => {
           </p>
           
           {/* Upload Video Button - Available to all users */}
-          <div className="mt-6 flex justify-center gap-4">
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
@@ -356,6 +428,42 @@ const Portfolio = () => {
               </Dialog>
             )}
             
+            {/* Export/Import Video Buttons */}
+            {projects.length > 0 && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={exportVideos}
+                  className="flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  Export Videos
+                </Button>
+                
+                <div className="relative">
+                  <input
+                    id="import-videos"
+                    type="file"
+                    accept=".json"
+                    onChange={importVideos}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" x2="12" y1="3" y2="15" />
+                    </svg>
+                    Import Videos
+                  </Button>
+                </div>
+              </>
+            )}
+            
             {/* Clear All Videos Button - Only show if there are videos */}
             {projects.length > 0 && (
               <Button 
@@ -401,13 +509,14 @@ const Portfolio = () => {
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
               {showcaseVideos[activeVideoIndex] && (
                 <video
-                  key={`feature-${activeVideoIndex}`}
+                  key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
                   className="w-full h-full object-cover"
                   autoPlay
                   muted
                   loop
                   playsInline
+                  preload="auto"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
@@ -427,7 +536,7 @@ const Portfolio = () => {
               <div className="flex space-x-6 px-4">
                 {showcaseVideos.map((video, index) => (
                   <div 
-                    key={`thumb-${video.id}`}
+                    key={`thumb-${video.id}-${index}`}
                     className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
                       shadow-lg transition-all duration-500 ease-out transform
                       ${index === activeVideoIndex 
@@ -451,9 +560,11 @@ const Portfolio = () => {
                   >
                     <video 
                       src={video.videoUrl} 
-                      className="w-full h-full object-cover"
+                      className="preview-video w-full h-full object-cover"
                       muted
                       loop
+                      playsInline
+                      preload="auto"
                       autoPlay={index === activeVideoIndex}
                       onLoadedMetadata={(e) => {
                         if (index !== activeVideoIndex) {
@@ -507,13 +618,15 @@ const Portfolio = () => {
                 <TabsContent key={cat.id} value={cat.id} className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
-                      <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
+                      <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
                         {/* Project Thumbnail */}
                         <video
                           src={project.videoUrl}
-                          className="w-full h-full object-cover"
+                          className="grid-video w-full h-full object-cover"
                           muted
                           loop
+                          playsInline
+                          preload="auto"
                           onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                           onMouseOut={(e) => {
                             const video = e.target as HTMLVideoElement;
@@ -545,6 +658,8 @@ const Portfolio = () => {
                                     controls 
                                     className="w-full h-full object-contain"
                                     autoPlay
+                                    playsInline
+                                    preload="auto"
                                   />
                                 </div>
                               </DialogContent>
@@ -614,7 +729,7 @@ const Portfolio = () => {
         )}
       </div>
       
-      {/* Add custom styling for scrollbar hiding */}
+      {/* Add custom styling for scrollbar hiding and video autoplay */}
       <style>
         {`
         .no-scrollbar::-webkit-scrollbar {
