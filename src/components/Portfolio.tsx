@@ -220,26 +220,53 @@ const Portfolio = () => {
           </div>
         </div>
         
-        {/* Empty state message when there are no videos - showing this by default now */}
-        <div className="text-center p-12 bg-gray-50 rounded-lg mb-16">
-          <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-          <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
-          <p className="text-gray-600 mt-2">
-            {isAdmin 
-              ? "Upload premium quality videos using the Upload button above." 
-              : "The admin has not uploaded any videos yet."}
-          </p>
-        </div>
+        {/* Empty state message when there are no videos */}
+        {projects.length === 0 ? (
+          <div className="text-center p-12 bg-gray-50 rounded-lg mb-16">
+            <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
+            <p className="text-gray-600 mt-2">
+              {isAdmin 
+                ? "Upload premium quality videos using the Upload button above." 
+                : "The admin has not uploaded any videos yet."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Video Grid when we have videos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {filteredProjects.map((project) => (
+                <div key={project.id} className="relative rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl">
+                  <video 
+                    src={project.videoUrl} 
+                    poster={project.thumbnail}
+                    className="w-full h-64 object-cover"
+                    controls
+                  />
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
+                    <BadgeCheck className="w-3 h-3 mr-1" />
+                    Full HD
+                  </div>
+                  <div className="p-4 bg-white">
+                    <h3 className="font-medium text-lg">{project.title}</h3>
+                    <p className="text-gray-600 text-sm">{project.client}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         
         {/* Filter Buttons - only show if there are videos or admin is logged in */}
-        {isAdmin && (
+        {(projects.length > 0 || isAdmin) && (
           <div className="flex flex-wrap justify-center mb-12 gap-2">
             {[
               { id: 'all', label: 'All Work' },
               { id: 'fashion', label: 'Fashion & Modeling' },
               { id: 'fitness', label: 'Fitness & Training' },
               { id: 'events', label: 'Events & Nightlife' },
-              { id: 'brand', label: 'Brand Collaborations' }
+              { id: 'brand', label: 'Brand Collaborations' },
+              { id: 'uploads', label: 'Uploaded Videos' }
             ].map(category => {
               return (
                 <button
@@ -257,11 +284,6 @@ const Portfolio = () => {
             })}
           </div>
         )}
-        
-        {/* Portfolio Grid - No videos to show */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Empty grid - videos have been removed */}
-        </div>
         
         {/* Custom styling remains the same */}
         <style>
