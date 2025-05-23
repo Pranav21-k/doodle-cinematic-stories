@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
+import { Play, Video, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Link } from "react-router-dom";
@@ -12,13 +12,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -59,7 +52,6 @@ const STORAGE_KEY = 'portfolio_videos';
 const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -67,6 +59,8 @@ const Portfolio = () => {
   const [adminPassword, setAdminPassword] = useState("");
   const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
+  const [videosLoaded, setVideosLoaded] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -89,17 +83,51 @@ const Portfolio = () => {
 
   // Load videos from local storage on component mount
   useEffect(() => {
-    const savedVideos = localStorage.getItem(STORAGE_KEY);
-    if (savedVideos) {
+    const loadVideos = async () => {
       try {
-        const parsedVideos = JSON.parse(savedVideos);
-        setProjects(parsedVideos);
-        console.log(`${parsedVideos.length} videos loaded from storage`);
+        setLoadingError(null);
+        const savedVideos = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedVideos) {
+          try {
+            const parsedVideos = JSON.parse(savedVideos);
+            
+            // Check if first video is accessible
+            const firstVideo = parsedVideos[0];
+            if (firstVideo && firstVideo.videoUrl) {
+              const videoEl = document.createElement('video');
+              
+              videoEl.onloadedmetadata = () => {
+                console.log(`Video successfully loaded: ${firstVideo.videoUrl}`);
+                setProjects(parsedVideos);
+                setVideosLoaded(true);
+                console.log(`${parsedVideos.length} videos loaded from storage`);
+              };
+              
+              videoEl.onerror = (e) => {
+                console.error('Error loading video:', e);
+                setLoadingError(`Unable to load video at ${firstVideo.videoUrl}. Check if video files exist in the public folder.`);
+              };
+              
+              videoEl.src = firstVideo.videoUrl;
+            } else {
+              setLoadingError('No valid videos found in storage');
+            }
+          } catch (error) {
+            console.error('Failed to parse saved videos', error);
+            toast.error('Failed to load saved videos');
+            setLoadingError('Failed to parse saved videos');
+          }
+        } else {
+          setLoadingError('No videos found in storage. Please reload the page.');
+        }
       } catch (error) {
-        console.error('Failed to parse saved videos', error);
-        toast.error('Failed to load saved videos');
+        console.error('Error loading videos:', error);
+        setLoadingError('Error loading videos. Please reload the page.');
       }
-    }
+    };
+    
+    loadVideos();
   }, []);
 
   // Save videos to local storage whenever projects change
@@ -272,6 +300,16 @@ const Portfolio = () => {
     ? projects
     : projects.filter(project => project.category === activeFilter);
 
+  // Check if a video URL is valid
+  const checkVideoURL = (url: string) => {
+    try {
+      // Test if URL is valid (starts with http or /)
+      return url && (url.startsWith('http') || url.startsWith('/'));
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
     <section id="portfolio" className="section-padding bg-white">
       <div className="container mx-auto px-6 md:px-12">
@@ -297,84 +335,121 @@ const Portfolio = () => {
             </div>
           )}
           
+          {/* Debug info - Only visible in development mode */}
+          {isDevelopment && (
+            <div className="mt-4 text-xs text-left bg-gray-100 p-4 rounded-md">
+              <h4 className="font-bold">Debug Info:</h4>
+              <p>Videos loaded: {videosLoaded ? 'Yes' : 'No'}</p>
+              <p>Number of videos: {projects.length}</p>
+              <p>Error loading: {loadingError || 'None'}</p>
+              <p>Storage key: {STORAGE_KEY}</p>
+              <p>First video URL: {projects.length > 0 ? projects[0].videoUrl : 'None'}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  localStorage.removeItem(STORAGE_KEY);
+                  window.location.reload();
+                }}
+                className="mt-2"
+              >
+                Clear Storage & Reload
+              </Button>
+            </div>
+          )}
+          
           {/* Manage Featured Videos Button */}
           {projects.length > 0 && (
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
-              <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Choose Featured Videos
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Choose Featured Videos</DialogTitle>
-                    <DialogDescription>
-                      Select up to {previewLimit} videos to feature in the preview carousel
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="py-4">
-                    <div className="space-y-4">
-                      {projects.map(project => (
-                        <div key={project.id} className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md cursor-pointer" onClick={() => toggleFeaturedVideo(project.id)}>
-                          <div className="relative w-24 h-16 rounded overflow-hidden">
-                            <video
-                              src={project.videoUrl}
-                              className="w-full h-full object-cover"
-                              muted
-                            />
-                            {project.featured && (
-                              <div className="absolute inset-0 bg-doodle-purple/30 flex items-center justify-center">
-                                <CheckCircle className="text-white h-6 w-6" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{project.title}</p>
-                            <p className="text-sm text-gray-500">{project.client}</p>
-                          </div>
-                          <div>
-                            {project.featured ? (
-                              <CheckCircle className="text-doodle-purple h-6 w-6" />
-                            ) : (
-                              <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
-                            )}
-                          </div>
+            <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Choose Featured Videos
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Choose Featured Videos</DialogTitle>
+                  <DialogDescription>
+                    Select up to {previewLimit} videos to feature in the preview carousel
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="space-y-4">
+                    {projects.map(project => (
+                      <div key={project.id} className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md cursor-pointer" onClick={() => toggleFeaturedVideo(project.id)}>
+                        <div className="relative w-24 h-16 rounded overflow-hidden">
+                          <video
+                            src={project.videoUrl}
+                            className="w-full h-full object-cover"
+                            muted
+                          />
+                          {project.featured && (
+                            <div className="absolute inset-0 bg-doodle-purple/30 flex items-center justify-center">
+                              <CheckCircle className="text-white h-6 w-6" />
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="mt-6 text-sm text-gray-500">
-                      {projects.filter(p => p.featured).length} of {previewLimit} featured videos selected
-                    </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{project.title}</p>
+                          <p className="text-sm text-gray-500">{project.client}</p>
+                        </div>
+                        <div>
+                          {project.featured ? (
+                            <CheckCircle className="text-doodle-purple h-6 w-6" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </DialogContent>
-              </Dialog>
-              
-              {/* Export/Import Video Buttons */}
-              {projects.length > 0 && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    onClick={exportVideos}
-                    className="flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" x2="12" y1="15" y2="3" />
-                    </svg>
-                    Export Videos
-                  </Button>
-                </>
-              )}
-            </div>
+                  
+                  <div className="mt-6 text-sm text-gray-500">
+                    {projects.filter(p => p.featured).length} of {previewLimit} featured videos selected
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Export/Import Video Buttons */}
+            {projects.length > 0 && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={exportVideos}
+                  className="flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  Export Videos
+                </Button>
+              </>
+            )}
           )}
         </div>
         
+        {/* Loading error message */}
+        {loadingError && (
+          <div className="text-center py-16 border-2 border-dashed border-red-300 rounded-xl mb-12 bg-red-50">
+            <Video className="w-12 h-12 mx-auto text-red-300 mb-4" />
+            <h3 className="text-xl font-medium mb-2 text-red-700">Unable to load videos</h3>
+            <p className="text-gray-700 mb-6">
+              {loadingError}
+            </p>
+            <Button 
+              onClick={() => window.location.reload()}
+            >
+              Reload Page
+            </Button>
+          </div>
+        )}
+        
         {/* Immersive Video Carousel - Enhanced Style */}
-        {showcaseVideos.length > 0 ? (
+        {showcaseVideos.length > 0 && !loadingError ? (
           <div className="mb-16 relative">
             {/* Preview Limit Controls */}
             <div className="flex justify-between items-center mb-4">
@@ -398,16 +473,28 @@ const Portfolio = () => {
             
             {/* Main Feature Video */}
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
-              {showcaseVideos[activeVideoIndex] && (
+              {showcaseVideos[activeVideoIndex] && showcaseVideos[activeVideoIndex].videoUrl && (
                 <video
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
-                  src={showcaseVideos[activeVideoIndex]?.videoUrl}
+                  src={showcaseVideos[activeVideoIndex].videoUrl}
                   className="w-full h-full object-cover"
                   autoPlay
                   muted
                   loop
                   playsInline
                   preload="auto"
+                  onError={(e) => {
+                    console.error('Error loading feature video:', e);
+                    // Set a fallback image if video fails to load
+                    (e.target as HTMLVideoElement).style.display = 'none';
+                    const parent = (e.target as HTMLVideoElement).parentElement;
+                    if (parent) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-full h-full bg-gray-800 flex items-center justify-center';
+                      fallback.innerHTML = '<p class="text-white">Video unavailable</p>';
+                      parent.appendChild(fallback);
+                    }
+                  }}
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
@@ -464,6 +551,22 @@ const Portfolio = () => {
                           (e.target as HTMLVideoElement).play();
                         }
                       }}
+                      onError={(e) => {
+                        console.error(`Error loading thumbnail video ${video.id}:`, e);
+                        // Replace with fallback on error
+                        const videoEl = e.target as HTMLVideoElement;
+                        videoEl.style.display = 'none';
+                        
+                        // Create fallback element
+                        const fallback = document.createElement('div');
+                        fallback.className = 'w-full h-full bg-gray-800 flex items-center justify-center';
+                        fallback.innerHTML = '<p class="text-white text-xs">Video error</p>';
+                        
+                        // Add fallback to parent
+                        if (videoEl.parentElement) {
+                          videoEl.parentElement.appendChild(fallback);
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
                       <div className="p-3">
@@ -475,7 +578,7 @@ const Portfolio = () => {
               </div>
             </div>
           </div>
-        ) : (
+        ) : !loadingError ? (
           <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-xl mb-12">
             <Video className="w-12 h-12 mx-auto text-gray-300 mb-4" />
             <h3 className="text-xl font-medium mb-2">No videos available</h3>
@@ -483,10 +586,10 @@ const Portfolio = () => {
               Loading videos from your public folder...
             </p>
           </div>
-        )}
+        ) : null}
         
         {/* Updated Category Tabs */}
-        {projects.length > 0 && (
+        {projects.length > 0 && !loadingError && (
           <div className="mb-12">
             <Tabs defaultValue="all" onValueChange={setActiveFilter}>
               <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent">
@@ -588,7 +691,6 @@ const Portfolio = () => {
                               </DialogContent>
                             </Dialog>
                           </div>
-                        </div>
                         
                         {/* Featured badge */}
                         {project.featured && (

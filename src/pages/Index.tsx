@@ -59,6 +59,28 @@ const Index = () => {
     } else {
       console.log('Videos already exist in localStorage');
     }
+
+    // Force reload videos from public folder
+    const refreshVideos = () => {
+      try {
+        // Create a test video element to check if videos are accessible
+        const testVideo = document.createElement('video');
+        testVideo.src = '/modelling/01.mp4';
+        testVideo.onloadedmetadata = () => {
+          console.log('Videos are accessible from public folder');
+        };
+        testVideo.onerror = () => {
+          console.error('Error loading test video from public folder');
+          // In case of error, show user a helpful message
+          toast.error('Cannot load videos from public folder');
+        };
+      } catch (error) {
+        console.error('Video loading error:', error);
+      }
+    };
+    
+    refreshVideos();
+    
   }, []);
 
   return (
