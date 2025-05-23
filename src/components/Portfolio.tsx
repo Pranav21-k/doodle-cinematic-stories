@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon } from 'lucide-react';
+import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import VideoUploader from "@/components/VideoUploader";
@@ -44,6 +43,7 @@ type Project = {
   category: string;
   thumbnail: string;
   videoUrl?: string;
+  featured?: boolean; // Added featured flag
 };
 
 const Portfolio = () => {
@@ -57,6 +57,7 @@ const Portfolio = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
+  const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -83,7 +84,8 @@ const Portfolio = () => {
       client: "Your Project",
       category: "fashion", // Default category for new uploads
       thumbnail: previewUrl,
-      videoUrl: previewUrl
+      videoUrl: previewUrl,
+      featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
     };
     
     // Add the new project to the list
@@ -92,8 +94,46 @@ const Portfolio = () => {
     setIsUploadDialogOpen(false);
   };
 
-  // Get videos for the carousel, limited to previewLimit
-  const showcaseVideos = projects.slice(0, previewLimit);
+  // Toggle a video's featured status
+  const toggleFeaturedVideo = (id: number) => {
+    setProjects(prev => {
+      // Count how many videos are currently featured
+      const featuredCount = prev.filter(p => p.featured).length;
+      
+      return prev.map(project => {
+        if (project.id === id) {
+          // If it's already featured, we can always unfeature it
+          if (project.featured) {
+            return { ...project, featured: false };
+          } 
+          // If it's not featured and we have less than the limit, we can feature it
+          else if (featuredCount < previewLimit) {
+            return { ...project, featured: true };
+          } 
+          // Otherwise, show a toast that we've reached the limit
+          else {
+            toast.error(`You can only feature ${previewLimit} videos. Unfeature one first.`);
+            return project;
+          }
+        }
+        return project;
+      });
+    });
+  };
+
+  // Get featured videos for the carousel, limited to previewLimit
+  // If not enough featured videos, supplement with non-featured ones
+  const showcaseVideos = React.useMemo(() => {
+    const featured = projects.filter(p => p.featured);
+    
+    if (featured.length >= previewLimit) {
+      return featured.slice(0, previewLimit);
+    } else {
+      // If we don't have enough featured videos, add some non-featured ones
+      const nonFeatured = projects.filter(p => !p.featured);
+      return [...featured, ...nonFeatured].slice(0, previewLimit);
+    }
+  }, [projects, previewLimit]);
 
   // Start or stop autoplay
   useEffect(() => {
@@ -147,7 +187,7 @@ const Portfolio = () => {
           </p>
           
           {/* Upload Video Button - Available to all users */}
-          <div className="mt-6">
+          <div className="mt-6 flex justify-center gap-4">
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
@@ -172,6 +212,61 @@ const Portfolio = () => {
                 </div>
               </DialogContent>
             </Dialog>
+            
+            {/* Manage Featured Videos Button */}
+            {projects.length > 0 && (
+              <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Choose Featured Videos
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Choose Featured Videos</DialogTitle>
+                    <DialogDescription>
+                      Select up to {previewLimit} videos to feature in the preview carousel
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <div className="space-y-4">
+                      {projects.map(project => (
+                        <div key={project.id} className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md cursor-pointer" onClick={() => toggleFeaturedVideo(project.id)}>
+                          <div className="relative w-24 h-16 rounded overflow-hidden">
+                            <video
+                              src={project.videoUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                            />
+                            {project.featured && (
+                              <div className="absolute inset-0 bg-doodle-purple/30 flex items-center justify-center">
+                                <CheckCircle className="text-white h-6 w-6" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium">{project.title}</p>
+                            <p className="text-sm text-gray-500">{project.client}</p>
+                          </div>
+                          <div>
+                            {project.featured ? (
+                              <CheckCircle className="text-doodle-purple h-6 w-6" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6 text-sm text-gray-500">
+                      {projects.filter(p => p.featured).length} of {previewLimit} featured videos selected
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
         
@@ -350,6 +445,13 @@ const Portfolio = () => {
                             </DialogContent>
                           </Dialog>
                         </div>
+                        
+                        {/* Featured badge */}
+                        {project.featured && (
+                          <div className="absolute top-2 right-2 bg-doodle-purple text-white text-xs px-2 py-1 rounded-full">
+                            Featured
+                          </div>
+                        )}
                       </Card>
                     ))}
                     
