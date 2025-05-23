@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -588,6 +589,7 @@ const Portfolio = () => {
                               </DialogContent>
                             </Dialog>
                           </div>
+                        </div>
                         
                         {/* Featured badge */}
                         {project.featured && (
