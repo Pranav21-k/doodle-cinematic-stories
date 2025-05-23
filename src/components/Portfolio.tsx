@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -51,7 +50,7 @@ type Project = {
   category: string;
   thumbnail: string;
   videoUrl?: string;
-  featured?: boolean; // Added featured flag
+  featured?: boolean;
 };
 
 // Storage key for local storage
@@ -95,7 +94,7 @@ const Portfolio = () => {
       try {
         const parsedVideos = JSON.parse(savedVideos);
         setProjects(parsedVideos);
-        toast.info(`${parsedVideos.length} videos loaded from storage`);
+        console.log(`${parsedVideos.length} videos loaded from storage`);
       } catch (error) {
         console.error('Failed to parse saved videos', error);
         toast.error('Failed to load saved videos');
@@ -481,7 +480,7 @@ const Portfolio = () => {
             <Video className="w-12 h-12 mx-auto text-gray-300 mb-4" />
             <h3 className="text-xl font-medium mb-2">No videos available</h3>
             <p className="text-gray-500 mb-6">
-              Please contact the administrator to add videos to the portfolio.
+              Loading videos from your public folder...
             </p>
           </div>
         )}
