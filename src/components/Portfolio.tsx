@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,9 @@ type Project = {
   featured?: boolean; // Added featured flag
 };
 
+// Storage key for local storage
+const STORAGE_KEY = 'portfolio_videos';
+
 const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
@@ -75,11 +79,33 @@ const Portfolio = () => {
   // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
 
+  // Load videos from local storage on component mount
+  useEffect(() => {
+    const savedVideos = localStorage.getItem(STORAGE_KEY);
+    if (savedVideos) {
+      try {
+        const parsedVideos = JSON.parse(savedVideos);
+        setProjects(parsedVideos);
+        toast.info(`${parsedVideos.length} videos loaded from storage`);
+      } catch (error) {
+        console.error('Failed to parse saved videos', error);
+        toast.error('Failed to load saved videos');
+      }
+    }
+  }, []);
+
+  // Save videos to local storage whenever projects change
+  useEffect(() => {
+    if (projects.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    }
+  }, [projects]);
+
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
     // Create a new project with the uploaded video
     const newProject: Project = {
-      id: projects.length + 1,
+      id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
       title: "New Upload: " + file.name.split('.')[0],
       client: "Your Project",
       category: "fashion", // Default category for new uploads
@@ -89,7 +115,12 @@ const Portfolio = () => {
     };
     
     // Add the new project to the list
-    setProjects(prev => [newProject, ...prev]);
+    const updatedProjects = [newProject, ...projects];
+    setProjects(updatedProjects);
+    
+    // Save to local storage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+    
     toast.success("Video uploaded successfully!");
     setIsUploadDialogOpen(false);
   };
@@ -100,7 +131,7 @@ const Portfolio = () => {
       // Count how many videos are currently featured
       const featuredCount = prev.filter(p => p.featured).length;
       
-      return prev.map(project => {
+      const updated = prev.map(project => {
         if (project.id === id) {
           // If it's already featured, we can always unfeature it
           if (project.featured) {
@@ -118,6 +149,10 @@ const Portfolio = () => {
         }
         return project;
       });
+      
+      // Save updated projects to local storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
     });
   };
 
@@ -169,6 +204,30 @@ const Portfolio = () => {
     setIsAdmin(false);
     setAdminPassword("");
     toast.info("Logged out of admin mode");
+  };
+
+  // Handle video deletion
+  const handleDeleteVideo = (id: number) => {
+    setProjects(prev => {
+      const updated = prev.filter(project => project.id !== id);
+      // Save updated projects to local storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      toast.success("Video deleted successfully");
+      return updated;
+    });
+  };
+
+  // Handle category update
+  const handleCategoryUpdate = (id: number, category: string) => {
+    setProjects(prev => {
+      const updated = prev.map(project => 
+        project.id === id ? { ...project, category } : project
+      );
+      // Save updated projects to local storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      toast.success("Category updated");
+      return updated;
+    });
   };
 
   // Filter projects based on active filter
@@ -266,6 +325,22 @@ const Portfolio = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+            )}
+            
+            {/* Clear All Videos Button - Only show if there are videos */}
+            {projects.length > 0 && (
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete all videos? This cannot be undone.")) {
+                    setProjects([]);
+                    localStorage.removeItem(STORAGE_KEY);
+                    toast.success("All videos cleared");
+                  }
+                }}
+              >
+                Clear All Videos
+              </Button>
             )}
           </div>
         </div>
@@ -423,27 +498,69 @@ const Portfolio = () => {
                           <h3 className="text-white text-xl font-bold">{project.title}</h3>
                           <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
                           
-                          {/* Play button */}
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                                <Play size={20} />
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
-                              <DialogHeader>
-                                <DialogTitle>{project.title}</DialogTitle>
-                              </DialogHeader>
-                              <div className="aspect-video w-full">
-                                <video 
-                                  src={project.videoUrl} 
-                                  controls 
-                                  className="w-full h-full object-contain"
-                                  autoPlay
-                                />
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <div className="flex gap-2">
+                            {/* Play button */}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
+                                  <Play size={20} />
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle>{project.title}</DialogTitle>
+                                </DialogHeader>
+                                <div className="aspect-video w-full">
+                                  <video 
+                                    src={project.videoUrl} 
+                                    controls 
+                                    className="w-full h-full object-contain"
+                                    autoPlay
+                                  />
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            
+                            {/* Category selector */}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <button className="px-3 py-1.5 bg-white/20 text-white text-sm rounded-full hover:bg-white/30">
+                                  Change Category
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-xs">
+                                <DialogHeader>
+                                  <DialogTitle>Change Category</DialogTitle>
+                                </DialogHeader>
+                                <div className="grid grid-cols-1 gap-2 mt-4">
+                                  {categories.slice(1).map((cat) => ( // Skip "All Videos"
+                                    <Button 
+                                      key={cat.id} 
+                                      variant="outline" 
+                                      className={cat.id === project.category ? "bg-doodle-purple text-white" : ""}
+                                      onClick={() => {
+                                        handleCategoryUpdate(project.id, cat.id);
+                                      }}
+                                    >
+                                      {cat.name}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            
+                            {/* Delete button */}
+                            <button 
+                              className="ml-auto px-3 py-1.5 bg-red-500 text-white text-sm rounded-full hover:bg-red-600"
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this video?")) {
+                                  handleDeleteVideo(project.id);
+                                }
+                              }}
+                            >
+                              Delete Video
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Featured badge */}
