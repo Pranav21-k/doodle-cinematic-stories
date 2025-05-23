@@ -1,15 +1,14 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon } from 'lucide-react';
+import { Play, Video } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import VideoUploader from "@/components/VideoUploader";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -19,15 +18,6 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogFooter,
-} from "@/components/ui/alert-dialog";
 
 // Portfolio item type
 type Project = {
@@ -45,14 +35,6 @@ const Portfolio = () => {
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  
-  // In a real application, this would be stored securely on the server
-  // This is just for demonstration purposes
-  const ADMIN_PASSWORD = "admin123"; 
   
   // Updated sample portfolio projects with new categories
   const [projects, setProjects] = useState<Project[]>([
@@ -98,24 +80,6 @@ const Portfolio = () => {
     }
   ]);
 
-  // Handler for new video uploads
-  const handleVideoUploaded = (file: File, previewUrl: string) => {
-    // Create a new project with the uploaded video
-    const newProject: Project = {
-      id: projects.length + 1,
-      title: "New Upload: " + file.name.split('.')[0],
-      client: "Your Project",
-      category: "uploads",
-      thumbnail: previewUrl,
-      videoUrl: previewUrl
-    };
-    
-    // Add the new project to the list
-    setProjects(prev => [newProject, ...prev]);
-    toast.success("Video uploaded successfully!");
-    setIsUploadDialogOpen(false);
-  };
-
   // Get videos for the carousel
   const showcaseVideos = projects;
 
@@ -137,24 +101,6 @@ const Portfolio = () => {
     }
   }, [isAutoplay, showcaseVideos.length]);
 
-  // Handle admin login attempt
-  const handleAdminLogin = () => {
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      setIsAdminLoginOpen(false);
-      toast.success("Admin access granted!");
-    } else {
-      toast.error("Incorrect password");
-    }
-  };
-
-  // Handle admin logout
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
-    setAdminPassword("");
-    toast.info("Logged out of admin mode");
-  };
-
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
     ? projects
@@ -169,84 +115,6 @@ const Portfolio = () => {
           <p className="section-subtitle max-w-2xl mx-auto">
             Showcasing our best work and creative capabilities across industries.
           </p>
-          
-          {/* Upload Video Button - Only visible for admins or shows login prompt */}
-          <div className="mt-6">
-            {isAdmin ? (
-              <div className="flex items-center justify-center gap-4">
-                <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
-                      <Video className="mr-2 h-4 w-4" />
-                      Upload Video (Admin)
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Upload Video</DialogTitle>
-                      <DialogDescription>
-                        Upload your video to add it to your portfolio
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <VideoUploader 
-                        onVideoUploaded={handleVideoUploaded} 
-                        buttonText="Select Video File"
-                        showPreview={true}
-                        adminOnly={true}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleAdminLogout}
-                >
-                  Logout Admin
-                </Button>
-              </div>
-            ) : (
-              <AlertDialog open={isAdminLoginOpen} onOpenChange={setIsAdminLoginOpen}>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsAdminLoginOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <LockIcon size={16} />
-                  Admin Access
-                </Button>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Admin Login</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Enter the admin password to access video upload functionality.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label htmlFor="password" className="text-right">
-                        Password
-                      </label>
-                      <input
-                        id="password"
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        className="col-span-3 rounded-md border border-input px-4 py-2"
-                      />
-                    </div>
-                  </div>
-                  
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setAdminPassword("")}>Cancel</AlertDialogCancel>
-                    <Button onClick={handleAdminLogin}>Login</Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
         </div>
         
         {/* Immersive Video Carousel - Enhanced Style */}
@@ -345,21 +213,13 @@ const Portfolio = () => {
         
         {/* Updated Filter Buttons with new categories */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {['all', 'fashion', 'fitness', 'events', 'brand', 'uploads'].map(category => {
-            // Don't show "uploads" category if there are no uploaded videos and user is not admin
-            if (category === 'uploads' && 
-                !projects.some(p => p.category === 'uploads') && 
-                !isAdmin) {
-              return null;
-            }
-            
+          {['all', 'fashion', 'fitness', 'events', 'brand'].map(category => {            
             const displayName = {
               'all': 'All Work',
               'fashion': 'Fashion & Modeling',
               'fitness': 'Fitness & Training',
               'events': 'Events & Nightlife',
-              'brand': 'Brand Collaborations',
-              'uploads': 'Your Uploads'
+              'brand': 'Brand Collaborations'
             }[category];
             
             return (
