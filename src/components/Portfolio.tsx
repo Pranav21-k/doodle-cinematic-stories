@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Video, Upload, BadgeCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -54,6 +53,7 @@ const Portfolio = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   
   // Sample portfolio projects with videos that match the Lemonlight style
   const [projects, setProjects] = useState<Project[]>([
@@ -91,6 +91,11 @@ const Portfolio = () => {
     },
   ]);
 
+  // Initialize video refs array
+  useEffect(() => {
+    videoRefs.current = videoRefs.current.slice(0, projects.length);
+  }, [projects]);
+
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
     // Create a new project with the uploaded video
@@ -109,34 +114,54 @@ const Portfolio = () => {
     setIsUploadDialogOpen(false);
   };
 
+  // Play all videos automatically
+  useEffect(() => {
+    // Set up the intersection observer to play videos when visible
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.5
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.target instanceof HTMLVideoElement) {
+          entry.target.play().catch(e => console.log("Auto-play prevented:", e));
+          entry.target.muted = true;
+        } else if (entry.target instanceof HTMLVideoElement) {
+          entry.target.pause();
+        }
+      });
+    }, options);
+
+    // Observe the main video
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    // Observe all project videos
+    videoRefs.current.forEach(videoRef => {
+      if (videoRef) {
+        observer.observe(videoRef);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [projects]);
+
   // Get videos for the carousel
   const showcaseVideos = projects;
 
-  // Start or stop autoplay
-  useEffect(() => {
-    if (isAutoplay && showcaseVideos.length > 1) {
-      const interval = setInterval(() => {
-        setActiveVideoIndex(prevIndex => {
-          const nextIndex = (prevIndex + 1) % showcaseVideos.length;
-          return nextIndex;
-        });
-      }, 8000); // Change video every 8 seconds
-      
-      setAutoplayInterval(interval);
-      return () => clearInterval(interval);
-    } else if (autoplayInterval) {
-      clearInterval(autoplayInterval);
-      setAutoplayInterval(null);
-    }
-  }, [isAutoplay, showcaseVideos.length]);
-
-  // Toggle video playback
+  // Play main video with sound
   const toggleVideoPlay = () => {
     if (videoRef.current) {
       if (isVideoPlaying) {
         videoRef.current.pause();
       } else {
         videoRef.current.play();
+        videoRef.current.muted = false;
       }
       setIsVideoPlaying(!isVideoPlaying);
     }
@@ -161,13 +186,17 @@ const Portfolio = () => {
         {projects.length > 0 ? (
           <div className="mb-16">
             {/* Hero featured video with overlay play effect */}
-            <div className="relative rounded-lg overflow-hidden aspect-video max-w-5xl mx-auto shadow-2xl mb-16">
+            <div 
+              className="relative rounded-lg overflow-hidden aspect-video max-w-5xl mx-auto shadow-2xl mb-16 transform transition-all duration-700 hover:scale-105 hover:rotate-1"
+              style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
+            >
               <video 
                 ref={videoRef}
                 src={projects[0].videoUrl} 
                 poster={projects[0].thumbnail}
                 className="w-full h-full object-cover"
                 preload="metadata"
+                loop
                 onClick={toggleVideoPlay}
                 onPlay={() => setIsVideoPlaying(true)}
                 onPause={() => setIsVideoPlaying(false)}
@@ -189,7 +218,7 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Video Grid with hover effects - Lemonlight style */}
+            {/* Video Grid with hover effects and 3D transform */}
             <div className="mb-12">
               {/* Filter Buttons - Lemonlight style */}
               <div className="flex flex-wrap justify-center mb-12 gap-4">
@@ -215,26 +244,37 @@ const Portfolio = () => {
                 ))}
               </div>
               
-              {/* Video Carousel - Horizontal scrolling with snap */}
+              {/* 3D Video Grid with continuous autoplay */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                {filteredProjects.slice(0, 6).map((project) => (
+                {filteredProjects.slice(0, 6).map((project, index) => (
                   <HoverCard key={project.id}>
                     <HoverCardTrigger asChild>
-                      <div className="relative group rounded-lg overflow-hidden shadow-lg aspect-video cursor-pointer">
+                      <div 
+                        className="relative group rounded-lg overflow-hidden shadow-lg aspect-video cursor-pointer transform transition-all duration-500 hover:scale-105 hover:rotate-2"
+                        style={{ 
+                          perspective: "1000px", 
+                          transformStyle: "preserve-3d",
+                          boxShadow: "rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px"
+                        }}
+                      >
                         <video 
+                          ref={el => videoRefs.current[index] = el}
                           src={project.videoUrl} 
                           poster={project.thumbnail}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           preload="metadata"
+                          muted
+                          loop
+                          playsInline
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
                           <div className="bg-yellow-400 rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                             <Play className="h-6 w-6 text-black" />
                           </div>
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">
-                          <h3 className="font-bold text-lg">{project.title}</h3>
-                          <p className="text-yellow-400 text-sm">{project.client}</p>
+                          <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">
+                            <h3 className="font-bold text-lg">{project.title}</h3>
+                            <p className="text-yellow-400 text-sm">{project.client}</p>
+                          </div>
                         </div>
                       </div>
                     </HoverCardTrigger>
@@ -252,7 +292,9 @@ const Portfolio = () => {
             <div className="flex justify-center mt-12">
               <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-10 py-6 rounded-full text-lg">
+                  <Button 
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-10 py-6 rounded-full text-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  >
                     <Upload className="w-5 h-5 mr-2" /> Upload Your Video
                   </Button>
                 </DialogTrigger>
@@ -297,6 +339,17 @@ const Portfolio = () => {
           .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+          }
+          @keyframes float {
+            0% {
+              transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+              transform: translateY(-10px) rotate(1deg);
+            }
+            100% {
+              transform: translateY(0px) rotate(0deg);
+            }
           }
           `}
         </style>
