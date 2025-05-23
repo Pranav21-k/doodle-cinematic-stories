@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon, BadgeCheck } from 'lucide-react';
+import { Play, Video, Upload, BadgeCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import VideoUploader from "@/components/VideoUploader";
@@ -46,13 +46,6 @@ const Portfolio = () => {
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  
-  // In a real application, this would be stored securely on the server
-  // This is just for demonstration purposes
-  const ADMIN_PASSWORD = "admin123"; 
   
   // Empty portfolio projects - removed all videos
   const [projects, setProjects] = useState<Project[]>([]);
@@ -96,24 +89,6 @@ const Portfolio = () => {
     }
   }, [isAutoplay, showcaseVideos.length]);
 
-  // Handle admin login attempt
-  const handleAdminLogin = () => {
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      setIsAdminLoginOpen(false);
-      toast.success("Admin access granted! You can now upload high-quality videos.");
-    } else {
-      toast.error("Incorrect password");
-    }
-  };
-
-  // Handle admin logout
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
-    setAdminPassword("");
-    toast.info("Logged out of admin mode");
-  };
-
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
     ? projects
@@ -137,86 +112,32 @@ const Portfolio = () => {
             </span>
           </div>
           
-          {/* Upload Video Button - Only visible for admins or shows login prompt */}
+          {/* Upload Video Button - Now available for all users */}
           <div className="mt-6">
-            {isAdmin ? (
-              <div className="flex items-center justify-center gap-4">
-                <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
-                      <Video className="mr-2 h-4 w-4" />
-                      Upload High-Quality Video
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Upload Premium Video</DialogTitle>
-                      <DialogDescription>
-                        Upload your video in its original quality. No compression, no quality loss, no file size limits.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <VideoUploader 
-                        onVideoUploaded={handleVideoUploaded} 
-                        buttonText="Select Premium Video File"
-                        showPreview={true}
-                        adminOnly={true}
-                        highQuality={true}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleAdminLogout}
-                >
-                  Logout Admin
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload High-Quality Video
                 </Button>
-              </div>
-            ) : (
-              <AlertDialog open={isAdminLoginOpen} onOpenChange={setIsAdminLoginOpen}>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsAdminLoginOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <LockIcon size={16} />
-                  Admin Access
-                </Button>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Admin Login</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Enter the admin password to access high-quality video upload functionality.
-                      <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
-                        Password hint: admin123
-                      </div>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label htmlFor="password" className="text-right">
-                        Password
-                      </label>
-                      <input
-                        id="password"
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        className="col-span-3 rounded-md border border-input px-4 py-2"
-                      />
-                    </div>
-                  </div>
-                  
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setAdminPassword("")}>Cancel</AlertDialogCancel>
-                    <Button onClick={handleAdminLogin}>Login</Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload Premium Video</DialogTitle>
+                  <DialogDescription>
+                    Upload your video in its original quality. No compression, no quality loss, no file size limits.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <VideoUploader 
+                    onVideoUploaded={handleVideoUploaded} 
+                    buttonText="Select Premium Video File"
+                    showPreview={true}
+                    highQuality={true}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
@@ -226,9 +147,7 @@ const Portfolio = () => {
             <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
             <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
             <p className="text-gray-600 mt-2">
-              {isAdmin 
-                ? "Upload premium quality videos using the Upload button above." 
-                : "The admin has not uploaded any videos yet."}
+              Upload premium quality videos using the Upload button above.
             </p>
           </div>
         ) : (
@@ -257,8 +176,8 @@ const Portfolio = () => {
           </>
         )}
         
-        {/* Filter Buttons - only show if there are videos or admin is logged in */}
-        {(projects.length > 0 || isAdmin) && (
+        {/* Filter Buttons - only show if there are videos */}
+        {projects.length > 0 && (
           <div className="flex flex-wrap justify-center mb-12 gap-2">
             {[
               { id: 'all', label: 'All Work' },
