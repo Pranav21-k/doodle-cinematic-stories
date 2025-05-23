@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -82,6 +83,9 @@ const Portfolio = () => {
   
   // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
+
+  // Detect if we're in development mode
+  const isDevelopment = import.meta.env.MODE === 'development';
 
   // Load videos from local storage on component mount
   useEffect(() => {
@@ -277,6 +281,21 @@ const Portfolio = () => {
           <p className="section-subtitle max-w-2xl mx-auto">
             Watch and explore videos in our portfolio.
           </p>
+          
+          {/* Admin Button - Only visible in development */}
+          {isDevelopment && (
+            <div className="mt-4">
+              <Button variant="outline" asChild>
+                <Link to="/admin" className="flex items-center gap-2">
+                  <Video className="h-4 w-4" />
+                  Manage Videos (Admin)
+                </Link>
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">
+                This button is only visible during development
+              </p>
+            </div>
+          )}
           
           {/* Manage Featured Videos Button */}
           {projects.length > 0 && (
@@ -569,7 +588,6 @@ const Portfolio = () => {
                               </DialogContent>
                             </Dialog>
                           </div>
-                        </div>
                         
                         {/* Featured badge */}
                         {project.featured && (
