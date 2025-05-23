@@ -185,7 +185,7 @@ const Portfolio = () => {
                     <DialogHeader>
                       <DialogTitle>Upload Video</DialogTitle>
                       <DialogDescription>
-                        Upload your video to add it to your portfolio
+                        Upload your video to add it to your portfolio. High quality mode enabled - no file size limits.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
@@ -194,6 +194,7 @@ const Portfolio = () => {
                         buttonText="Select Video File"
                         showPreview={true}
                         adminOnly={true}
+                        highQuality={true}
                       />
                     </div>
                   </DialogContent>
@@ -271,14 +272,15 @@ const Portfolio = () => {
                 <video
                   key={`feature-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain" // Changed from object-cover to object-contain
                   autoPlay
                   muted
                   loop
                   playsInline
+                  controls // Added controls
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end pointer-events-none">
                 <div className="p-6">
                   <h3 className="text-white text-2xl font-bold">
                     {showcaseVideos[activeVideoIndex]?.title}
@@ -411,13 +413,15 @@ const Portfolio = () => {
                   <DialogContent className="max-w-4xl">
                     <DialogHeader>
                       <DialogTitle>{project.title}</DialogTitle>
+                      <DialogDescription>High quality video</DialogDescription>
                     </DialogHeader>
                     <div className="aspect-video w-full">
                       <video 
                         src={project.videoUrl} 
                         controls 
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain" // Changed from object-fill to object-contain
                         autoPlay
+                        playsInline
                       />
                     </div>
                   </DialogContent>

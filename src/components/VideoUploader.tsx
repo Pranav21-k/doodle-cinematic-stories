@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ type VideoUploaderProps = {
   showPreview?: boolean;
   adminOnly?: boolean; // Prop to control admin-only access
   multiple?: boolean; // Allow multiple file uploads
+  highQuality?: boolean; // New prop for high quality options
 };
 
 const VideoUploader = ({ 
@@ -23,7 +23,8 @@ const VideoUploader = ({
   buttonText = "Upload Video", 
   showPreview = true,
   adminOnly = true, // Default to true - only admins can upload
-  multiple = false // Default to single upload
+  multiple = false, // Default to single upload
+  highQuality = true // Default to high quality
 }: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
@@ -79,11 +80,14 @@ const VideoUploader = ({
       return;
     }
 
-    // Check file size (limited to 100MB)
-    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-    if (file.size > maxSize) {
-      toast.error('Video file is too large. Please upload a file smaller than 100MB.');
-      return;
+    // Removed size limit for high quality videos
+    if (!highQuality) {
+      // Only check size if not in high quality mode
+      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+      if (file.size > maxSize) {
+        toast.error('Video file is too large. Please upload a file smaller than 100MB.');
+        return;
+      }
     }
 
     // Simulate upload progress
@@ -97,7 +101,7 @@ const VideoUploader = ({
         clearInterval(interval);
         setIsUploading(false);
         
-        // Create a URL for the video preview
+        // Create a URL for the video preview - no compression applied
         const previewUrl = URL.createObjectURL(file);
         setVideoPreview(previewUrl);
         toast.success('Video uploaded successfully!');
@@ -119,16 +123,20 @@ const VideoUploader = ({
       return;
     }
     
-    // Check file sizes
-    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-    const oversizedFiles = videoFiles.filter(file => file.size > maxSize);
+    // Check file sizes only if not in high quality mode
+    let validFiles = videoFiles;
     
-    if (oversizedFiles.length > 0) {
-      toast.error(`${oversizedFiles.length} video(s) exceed the 100MB size limit and will be skipped.`);
+    if (!highQuality) {
+      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+      const oversizedFiles = videoFiles.filter(file => file.size > maxSize);
+      
+      if (oversizedFiles.length > 0) {
+        toast.error(`${oversizedFiles.length} video(s) exceed the 100MB size limit and will be skipped.`);
+      }
+      
+      // Keep only valid files
+      validFiles = videoFiles.filter(file => file.size <= maxSize);
     }
-    
-    // Keep only valid files
-    const validFiles = videoFiles.filter(file => file.size <= maxSize);
     
     if (validFiles.length === 0) {
       return;
@@ -145,7 +153,7 @@ const VideoUploader = ({
         clearInterval(interval);
         setIsUploading(false);
         
-        // Create preview URLs for all files
+        // Create preview URLs for all files - no compression
         const newPreviews = validFiles.map(file => ({
           file,
           url: URL.createObjectURL(file)
@@ -208,6 +216,10 @@ const VideoUploader = ({
               </div>
               <p className="text-xs text-center mt-1">{uploadProgress}% uploaded</p>
             </div>
+          )}
+          
+          {highQuality && (
+            <p className="text-xs text-green-600 mt-4">High quality mode enabled - no file size limits</p>
           )}
         </div>
       ) : showPreview ? (
