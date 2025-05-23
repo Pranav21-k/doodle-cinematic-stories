@@ -29,6 +29,12 @@ import {
   AlertDialogCancel,
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 // Portfolio item type
 type Project = {
@@ -41,7 +47,7 @@ type Project = {
 };
 
 const Portfolio = () => {
-  const [activeFilter, setActiveFilter] = useState('uploads');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
@@ -55,6 +61,15 @@ const Portfolio = () => {
   // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
+  // Updated categories based on user's request
+  const categories = [
+    { id: 'all', name: 'All Videos' },
+    { id: 'fashion', name: 'Fashion & Modeling' },
+    { id: 'fitness', name: 'Fitness & Training' },
+    { id: 'events', name: 'Events & Nightlife' },
+    { id: 'brand', name: 'Brand Collaborations' }
+  ];
+  
   // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -65,7 +80,7 @@ const Portfolio = () => {
       id: projects.length + 1,
       title: "New Upload: " + file.name.split('.')[0],
       client: "Your Project",
-      category: "uploads",
+      category: "fashion", // Default category for new uploads
       thumbnail: previewUrl,
       videoUrl: previewUrl
     };
@@ -265,86 +280,82 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Updated Filter Buttons - only show "uploads" category */}
+        {/* Updated Category Tabs */}
         {projects.length > 0 && (
-          <div className="flex flex-wrap justify-center mb-12 gap-2">
-            {['all', 'uploads'].map(category => {
-              const displayName = {
-                'all': 'All Videos',
-                'uploads': 'Your Uploads'
-              }[category];
+          <div className="mb-12">
+            <Tabs defaultValue="all" onValueChange={setActiveFilter}>
+              <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent">
+                {categories.map((cat) => (
+                  <TabsTrigger 
+                    key={cat.id} 
+                    value={cat.id}
+                    className="px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
+                  >
+                    {cat.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
               
-              return (
-                <button
-                  key={category}
-                  onClick={() => setActiveFilter(category)}
-                  className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                    activeFilter === category 
-                      ? 'bg-doodle-purple text-white' 
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  {displayName}
-                </button>
-              );
-            })}
+              {categories.map((cat) => (
+                <TabsContent key={cat.id} value={cat.id} className="mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
+                      <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
+                        {/* Project Thumbnail */}
+                        <video
+                          src={project.videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                          onMouseOut={(e) => {
+                            const video = e.target as HTMLVideoElement;
+                            video.pause();
+                            video.currentTime = 0;
+                          }}
+                        />
+                        
+                        {/* Overlay with information */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <h3 className="text-white text-xl font-bold">{project.title}</h3>
+                          <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
+                          
+                          {/* Play button */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
+                                <Play size={20} />
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl">
+                              <DialogHeader>
+                                <DialogTitle>{project.title}</DialogTitle>
+                              </DialogHeader>
+                              <div className="aspect-video w-full">
+                                <video 
+                                  src={project.videoUrl} 
+                                  controls 
+                                  className="w-full h-full object-contain"
+                                  autoPlay
+                                />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </Card>
+                    ))}
+                    
+                    {(cat.id === 'all' ? projects.length === 0 : projects.filter(p => p.category === cat.id).length === 0) && (
+                      <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
+                        <p>No videos in this category. Upload some!</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
           </div>
         )}
-        
-        {/* Portfolio Grid */}
-        {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => (
-              <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
-                {/* Project Thumbnail */}
-                <video
-                  src={project.videoUrl}
-                  className="w-full h-full object-cover"
-                  muted
-                  loop
-                  onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                  onMouseOut={(e) => {
-                    const video = e.target as HTMLVideoElement;
-                    video.pause();
-                    video.currentTime = 0;
-                  }}
-                />
-                
-                {/* Overlay with information */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="text-white text-xl font-bold">{project.title}</h3>
-                  <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
-                  
-                  {/* Play button */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                        <Play size={20} />
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>{project.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="aspect-video w-full">
-                        <video 
-                          src={project.videoUrl} 
-                          controls 
-                          className="w-full h-full object-contain"
-                          autoPlay
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : projects.length > 0 ? (
-          <div className="text-center py-10">
-            <p>No videos match the selected filter.</p>
-          </div>
-        ) : null}
       </div>
       
       {/* Add custom styling for scrollbar hiding */}
