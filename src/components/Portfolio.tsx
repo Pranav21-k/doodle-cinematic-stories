@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Video } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import VideoUploader from "@/components/VideoUploader";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ const Portfolio = () => {
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   
   // Sample portfolio projects with real video URLs
   const [projects, setProjects] = useState<Project[]>([
@@ -81,6 +83,24 @@ const Portfolio = () => {
     }
   ]);
 
+  // Handler for new video uploads
+  const handleVideoUploaded = (file: File, previewUrl: string) => {
+    // Create a new project with the uploaded video
+    const newProject: Project = {
+      id: projects.length + 1,
+      title: "New Upload: " + file.name.split('.')[0],
+      client: "Your Project",
+      category: "uploads",
+      thumbnail: previewUrl,
+      videoUrl: previewUrl
+    };
+    
+    // Add the new project to the list
+    setProjects(prev => [newProject, ...prev]);
+    toast.success("Video uploaded successfully!");
+    setIsUploadDialogOpen(false);
+  };
+
   // Get videos for the carousel
   const showcaseVideos = projects;
 
@@ -116,6 +136,34 @@ const Portfolio = () => {
           <p className="section-subtitle max-w-2xl mx-auto">
             Showcasing our best work and creative capabilities across industries.
           </p>
+          
+          {/* Upload Video Button */}
+          <div className="mt-6">
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
+                  <Video className="mr-2 h-4 w-4" />
+                  Upload Your Video
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload Video</DialogTitle>
+                  <DialogDescription>
+                    Upload your video to add it to your portfolio
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <VideoUploader 
+                    onVideoUploaded={handleVideoUploaded} 
+                    buttonText="Select Video File"
+                    showPreview={true}
+                    adminOnly={false}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         
         {/* Immersive Video Carousel - Enhanced Style */}
@@ -214,13 +262,14 @@ const Portfolio = () => {
         
         {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {['all', 'commercial', 'brand', 'corporate', 'social'].map(category => {
+          {['all', 'commercial', 'brand', 'corporate', 'social', 'uploads'].map(category => {
             const displayName = {
               'all': 'All Work',
               'commercial': 'Commercials',
               'brand': 'Brand Films',
               'corporate': 'Corporate',
-              'social': 'Social Media'
+              'social': 'Social Media',
+              'uploads': 'Your Uploads'
             }[category];
             
             return (
