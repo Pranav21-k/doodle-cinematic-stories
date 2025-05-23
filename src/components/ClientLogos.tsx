@@ -1,13 +1,13 @@
 
 const ClientLogos = () => {
-  // Sample client logos (replace with actual client logos)
+  // Real client logos with brand names
   const clients = [
-    { id: 1, name: "Client 1" },
-    { id: 2, name: "Client 2" },
-    { id: 3, name: "Client 3" },
-    { id: 4, name: "Client 4" },
-    { id: 5, name: "Client 5" },
-    { id: 6, name: "Client 6" },
+    { id: 1, name: "Lulu" },
+    { id: 2, name: "H&M" },
+    { id: 3, name: "Splash" },
+    { id: 4, name: "Axis Events" },
+    { id: 5, name: "W Muscat" },
+    { id: 6, name: "Danube" },
   ];
 
   return (
