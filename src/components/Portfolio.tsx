@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
+import { Play, Video, LockIcon, CheckCircle, Save } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import VideoUploader from "@/components/VideoUploader";
@@ -52,6 +52,7 @@ type Project = {
   thumbnail: string;
   videoUrl?: string;
   featured?: boolean; // Added featured flag
+  dateAdded?: number; // Add timestamp for sorting
 };
 
 // Storage key for local storage
@@ -70,6 +71,7 @@ const Portfolio = () => {
   const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
   const [uploadCategory, setUploadCategory] = useState('fashion'); // New state for upload category
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -94,7 +96,14 @@ const Portfolio = () => {
       try {
         const parsedVideos = JSON.parse(savedVideos);
         setProjects(parsedVideos);
-        toast.info(`${parsedVideos.length} videos loaded from storage`);
+        
+        // Get the timestamp of when videos were last saved
+        const lastSaved = localStorage.getItem(STORAGE_KEY + '_last_saved');
+        if (lastSaved) {
+          setLastSaveTime(new Date(parseInt(lastSaved)));
+        }
+        
+        toast.info(`${parsedVideos.length} videos loaded from your device storage`);
       } catch (error) {
         console.error('Failed to parse saved videos', error);
         toast.error('Failed to load saved videos');
@@ -106,6 +115,10 @@ const Portfolio = () => {
   useEffect(() => {
     if (projects.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      // Save the timestamp when we last saved the videos
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+      setLastSaveTime(new Date(now));
     }
   }, [projects]);
 
@@ -116,10 +129,11 @@ const Portfolio = () => {
       id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
       title: "New Upload: " + file.name.split('.')[0],
       client: "Your Project",
-      category: uploadCategory, // Use selected category instead of hardcoded "fashion"
+      category: uploadCategory,
       thumbnail: previewUrl,
       videoUrl: previewUrl,
-      featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
+      featured: projects.length < previewLimit, // Auto-feature if we have fewer than previewLimit videos
+      dateAdded: Date.now() // Add timestamp for sorting
     };
     
     // Add the new project to the list
@@ -128,8 +142,13 @@ const Portfolio = () => {
     
     // Save to local storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+    const now = Date.now();
+    localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+    setLastSaveTime(new Date(now));
     
-    toast.success(`Video uploaded successfully to ${categories.find(c => c.id === uploadCategory)?.name || uploadCategory}!`);
+    toast.success(`Video uploaded and saved to ${categories.find(c => c.id === uploadCategory)?.name || uploadCategory}!`, {
+      description: "Your video is saved in your browser's local storage."
+    });
     setIsUploadDialogOpen(false);
   };
 
@@ -160,6 +179,9 @@ const Portfolio = () => {
       
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+      setLastSaveTime(new Date(now));
       return updated;
     });
   };
@@ -219,6 +241,9 @@ const Portfolio = () => {
       const updated = prev.filter(project => project.id !== id);
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+      setLastSaveTime(new Date(now));
       toast.success("Video deleted successfully");
       return updated;
     });
@@ -232,9 +257,55 @@ const Portfolio = () => {
       );
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+      setLastSaveTime(new Date(now));
       toast.success("Category updated");
       return updated;
     });
+  };
+
+  // Manual save function - for peace of mind
+  const handleManualSave = () => {
+    if (projects.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
+      setLastSaveTime(new Date(now));
+      toast.success("Videos have been saved to your device", {
+        description: "Your videos are securely stored in your browser's local storage."
+      });
+    } else {
+      toast.info("No videos to save");
+    }
+  };
+
+  // Format the last save time in a readable way
+  const formatSaveTime = (date: Date | null) => {
+    if (!date) return "Never";
+    
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    
+    // Less than a minute
+    if (diff < 60000) {
+      return "Just now";
+    }
+    
+    // Less than an hour
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    }
+    
+    // Less than a day
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    }
+    
+    // Format the date
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
   // Filter projects based on active filter
@@ -251,6 +322,30 @@ const Portfolio = () => {
           <p className="section-subtitle max-w-2xl mx-auto">
             Upload and showcase your videos. You can upload new videos using the button below.
           </p>
+          
+          {/* Storage Status */}
+          <div className="flex items-center justify-center mt-4 mb-6 text-sm text-gray-500">
+            <div className="flex items-center px-4 py-2 bg-gray-50 rounded-full shadow-sm">
+              {projects.length > 0 ? (
+                <>
+                  <span>
+                    {projects.length} video{projects.length !== 1 ? 's' : ''} saved • Last saved: {formatSaveTime(lastSaveTime)}
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleManualSave} 
+                    className="ml-2 text-doodle-purple hover:text-doodle-purple/90"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    Save Now
+                  </Button>
+                </>
+              ) : (
+                <span>No videos saved yet</span>
+              )}
+            </div>
+          </div>
           
           {/* Upload Video Button - Available to all users */}
           <div className="mt-6 flex justify-center gap-4">
@@ -297,6 +392,9 @@ const Portfolio = () => {
                     showPreview={true}
                     adminOnly={false} // Set to false so all users can upload
                   />
+                  <p className="text-xs text-gray-500">
+                    Videos will be saved to your device's browser storage and will be available when you return.
+                  </p>
                 </div>
               </DialogContent>
             </Dialog>
@@ -484,6 +582,9 @@ const Portfolio = () => {
             >
               Upload Now
             </Button>
+            <p className="text-xs text-gray-500 mt-4">
+              Your videos will be saved to your device's browser storage
+            </p>
           </div>
         )}
         
