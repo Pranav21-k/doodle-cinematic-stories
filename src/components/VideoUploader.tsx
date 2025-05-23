@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,15 +81,9 @@ const VideoUploader = ({
       return;
     }
 
-    // Removed size limit for high quality videos
-    if (!highQuality) {
-      // Only check size if not in high quality mode
-      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-      if (file.size > maxSize) {
-        toast.error('Video file is too large. Please upload a file smaller than 100MB.');
-        return;
-      }
-    }
+    // Always use high quality mode - no size restrictions
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    toast.info(`Processing ${fileSizeMB}MB high-quality video`);
 
     // Simulate upload progress
     setIsUploading(true);
@@ -101,10 +96,10 @@ const VideoUploader = ({
         clearInterval(interval);
         setIsUploading(false);
         
-        // Create a URL for the video preview - no compression applied
+        // Create a URL for the video preview - using original quality
         const previewUrl = URL.createObjectURL(file);
         setVideoPreview(previewUrl);
-        toast.success('Video uploaded successfully!');
+        toast.success(`${file.name} (${fileSizeMB}MB) uploaded successfully at original quality`);
         
         // Call the callback if provided
         if (onVideoUploaded) {
@@ -123,24 +118,9 @@ const VideoUploader = ({
       return;
     }
     
-    // Check file sizes only if not in high quality mode
-    let validFiles = videoFiles;
-    
-    if (!highQuality) {
-      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-      const oversizedFiles = videoFiles.filter(file => file.size > maxSize);
-      
-      if (oversizedFiles.length > 0) {
-        toast.error(`${oversizedFiles.length} video(s) exceed the 100MB size limit and will be skipped.`);
-      }
-      
-      // Keep only valid files
-      validFiles = videoFiles.filter(file => file.size <= maxSize);
-    }
-    
-    if (validFiles.length === 0) {
-      return;
-    }
+    // Always use high quality mode - no size limits
+    const totalSizeMB = videoFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
+    toast.info(`Processing ${videoFiles.length} videos (${totalSizeMB.toFixed(2)}MB total) at original quality`);
     
     // Simulate upload progress
     setIsUploading(true);
@@ -153,14 +133,14 @@ const VideoUploader = ({
         clearInterval(interval);
         setIsUploading(false);
         
-        // Create preview URLs for all files - no compression
-        const newPreviews = validFiles.map(file => ({
+        // Create preview URLs for all files - using original quality
+        const newPreviews = videoFiles.map(file => ({
           file,
           url: URL.createObjectURL(file)
         }));
         
         setVideoPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
-        toast.success(`${validFiles.length} video(s) uploaded successfully!`);
+        toast.success(`${videoFiles.length} video(s) uploaded successfully at original quality`);
         
         // Call the callback if provided
         if (onVideosUploaded) {
@@ -218,9 +198,11 @@ const VideoUploader = ({
             </div>
           )}
           
-          {highQuality && (
-            <p className="text-xs text-green-600 mt-4">High quality mode enabled - no file size limits</p>
-          )}
+          <div className="mt-4 bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg border border-green-100">
+            <p className="text-xs text-green-700 font-medium">
+              <span className="font-bold">Premium Quality:</span> Videos will be uploaded at their original quality with no compression
+            </p>
+          </div>
         </div>
       ) : showPreview ? (
         <div className="space-y-4">
@@ -229,8 +211,11 @@ const VideoUploader = ({
               <video 
                 src={videoPreview} 
                 controls 
-                className="w-full h-64 object-cover"
+                className="w-full h-64 object-contain bg-black"
               />
+              <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                High Quality
+              </div>
             </div>
           )}
           
@@ -241,12 +226,15 @@ const VideoUploader = ({
                   <video 
                     src={video.url} 
                     muted
-                    className="w-full h-32 object-cover"
+                    className="w-full h-32 object-contain bg-black"
                     onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                     onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
                   />
                   <div className="absolute bottom-2 right-2 text-white text-xs bg-black/50 px-2 py-1 rounded">
                     {video.file.name.substring(0, 15)}...
+                  </div>
+                  <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                    HD
                   </div>
                 </div>
               ))}
@@ -267,8 +255,8 @@ const VideoUploader = ({
         <div className="text-center">
           <p className="text-green-600 mb-2">
             {multiple && videoPreviews.length > 0 
-              ? `${videoPreviews.length} videos uploaded successfully!` 
-              : 'Video uploaded successfully!'}
+              ? `${videoPreviews.length} high-quality videos uploaded successfully!` 
+              : 'High-quality video uploaded successfully!'}
           </p>
           <Button
             variant="outline"

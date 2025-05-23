@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon } from 'lucide-react';
+import { Play, Video, LockIcon, BadgeCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import VideoUploader from "@/components/VideoUploader";
@@ -64,7 +64,7 @@ const Portfolio = () => {
     const newProject: Project = {
       id: projects.length + 1,
       title: "New Upload: " + file.name.split('.')[0],
-      client: "Your Project",
+      client: "Premium Quality Video",
       category: "uploads",
       thumbnail: previewUrl,
       videoUrl: previewUrl
@@ -72,7 +72,7 @@ const Portfolio = () => {
     
     // Add the new project to the list
     setProjects(prev => [newProject, ...prev]);
-    toast.success("Video uploaded successfully!");
+    toast.success("High quality video added to portfolio!");
     setIsUploadDialogOpen(false);
   };
 
@@ -102,7 +102,7 @@ const Portfolio = () => {
     if (adminPassword === ADMIN_PASSWORD) {
       setIsAdmin(true);
       setIsAdminLoginOpen(false);
-      toast.success("Admin access granted!");
+      toast.success("Admin access granted! You can now upload high-quality videos.");
     } else {
       toast.error("Incorrect password");
     }
@@ -127,8 +127,16 @@ const Portfolio = () => {
         <div className="text-center mb-16">
           <h2 className="section-title animate-fade-in">Our Portfolio</h2>
           <p className="section-subtitle max-w-2xl mx-auto">
-            Showcasing our best work and creative capabilities across industries.
+            Showcasing our highest quality work and creative capabilities across industries.
           </p>
+          
+          {/* Premium Quality Badge */}
+          <div className="flex items-center justify-center mt-2 mb-6">
+            <span className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+              <BadgeCheck className="w-4 h-4 mr-1" />
+              Premium Quality Video Uploads
+            </span>
+          </div>
           
           {/* Upload Video Button - Only visible for admins or shows login prompt */}
           <div className="mt-6">
@@ -138,20 +146,20 @@ const Portfolio = () => {
                   <DialogTrigger asChild>
                     <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
                       <Video className="mr-2 h-4 w-4" />
-                      Upload Video (Admin)
+                      Upload High-Quality Video
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Upload Video</DialogTitle>
+                      <DialogTitle>Upload Premium Video</DialogTitle>
                       <DialogDescription>
-                        Upload your video to add it to your portfolio. High quality mode enabled - no file size limits.
+                        Upload your video in its original quality. No compression, no quality loss, no file size limits.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                       <VideoUploader 
                         onVideoUploaded={handleVideoUploaded} 
-                        buttonText="Select Video File"
+                        buttonText="Select Premium Video File"
                         showPreview={true}
                         adminOnly={true}
                         highQuality={true}
@@ -181,7 +189,10 @@ const Portfolio = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Admin Login</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Enter the admin password to access video upload functionality.
+                      Enter the admin password to access high-quality video upload functionality.
+                      <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                        Password hint: admin123
+                      </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   
@@ -227,7 +238,7 @@ const Portfolio = () => {
             </div>
             
             {/* Main Feature Video */}
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl bg-black">
               {showcaseVideos[activeVideoIndex] && (
                 <video
                   key={`feature-${activeVideoIndex}`}
@@ -250,6 +261,10 @@ const Portfolio = () => {
                   </p>
                 </div>
               </div>
+              <div className="absolute top-4 right-4 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                <BadgeCheck className="w-3 h-3 mr-1" />
+                Premium Quality
+              </div>
             </div>
             
             {/* Horizontally Scrolling Video Thumbnails */}
@@ -259,7 +274,7 @@ const Portfolio = () => {
                   <div 
                     key={`thumb-${video.id}`}
                     className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
-                      shadow-lg transition-all duration-500 ease-out transform
+                      shadow-lg transition-all duration-500 ease-out transform bg-black
                       ${index === activeVideoIndex 
                         ? 'ring-4 ring-doodle-purple scale-110 z-10' 
                         : 'opacity-70 hover:opacity-90'
@@ -281,7 +296,7 @@ const Portfolio = () => {
                   >
                     <video 
                       src={video.videoUrl} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       muted
                       loop
                       autoPlay={index === activeVideoIndex}
@@ -298,6 +313,9 @@ const Portfolio = () => {
                         <p className="text-white text-sm font-bold truncate">{video.title}</p>
                       </div>
                     </div>
+                    <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-1 py-0.5 rounded-full flex items-center">
+                      <BadgeCheck className="w-3 h-3" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -312,7 +330,7 @@ const Portfolio = () => {
             <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
             <p className="text-gray-600 mt-2">
               {isAdmin 
-                ? "Upload videos using the Upload Video button above." 
+                ? "Upload premium quality videos using the Upload button above." 
                 : "The admin has not uploaded any videos yet."}
             </p>
           </div>
@@ -358,11 +376,11 @@ const Portfolio = () => {
         {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProjects.map((project) => (
-            <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
+            <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover border-0 shadow-lg bg-black">
               {/* Project Thumbnail */}
               <video
                 src={project.videoUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 muted
                 loop
                 onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
@@ -372,6 +390,12 @@ const Portfolio = () => {
                   video.currentTime = 0;
                 }}
               />
+              
+              {/* Premium Quality Badge */}
+              <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center z-10">
+                <BadgeCheck className="w-3 h-3 mr-1" />
+                Premium
+              </div>
               
               {/* Overlay with information */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -388,9 +412,9 @@ const Portfolio = () => {
                   <DialogContent className="max-w-4xl">
                     <DialogHeader>
                       <DialogTitle>{project.title}</DialogTitle>
-                      <DialogDescription>High quality video</DialogDescription>
+                      <DialogDescription>Premium quality video</DialogDescription>
                     </DialogHeader>
-                    <div className="aspect-video w-full">
+                    <div className="aspect-video w-full bg-black">
                       <video 
                         src={project.videoUrl} 
                         controls 
