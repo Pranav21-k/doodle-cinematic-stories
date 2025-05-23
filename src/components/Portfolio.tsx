@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -54,49 +55,8 @@ const Portfolio = () => {
   // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
-  // Sample portfolio projects with real video URLs
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: 1,
-      title: "Brand Story Campaign",
-      client: "TechVision",
-      category: "commercial",
-      thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    },
-    {
-      id: 2,
-      title: "Product Launch",
-      client: "Innovate Sports",
-      category: "brand",
-      thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    },
-    {
-      id: 3,
-      title: "Corporate Overview",
-      client: "Global Finance",
-      category: "corporate",
-      thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    },
-    {
-      id: 4,
-      title: "Social Media Campaign",
-      client: "Fashion Forward",
-      category: "social",
-      thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    },
-    {
-      id: 5,
-      title: "App Promo Video",
-      client: "FitnessPro",
-      category: "brand",
-      thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    }
-  ]);
+  // Empty portfolio projects - removed all existing videos
+  const [projects, setProjects] = useState<Project[]>([]);
 
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
@@ -250,7 +210,7 @@ const Portfolio = () => {
           </div>
         </div>
         
-        {/* Immersive Video Carousel - Enhanced Style */}
+        {/* Immersive Video Carousel - Only shown if there are videos */}
         {showcaseVideos.length > 0 && (
           <div className="mb-16 relative">
             {/* Autoplay Toggle */}
@@ -272,12 +232,12 @@ const Portfolio = () => {
                 <video
                   key={`feature-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
-                  className="w-full h-full object-contain" // Changed from object-cover to object-contain
+                  className="w-full h-full object-contain"
                   autoPlay
                   muted
                   loop
                   playsInline
-                  controls // Added controls
+                  controls
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end pointer-events-none">
@@ -345,40 +305,55 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {['all', 'commercial', 'brand', 'corporate', 'social', 'uploads'].map(category => {
-            // Don't show "uploads" category if there are no uploaded videos and user is not admin
-            if (category === 'uploads' && 
-                !projects.some(p => p.category === 'uploads') && 
-                !isAdmin) {
-              return null;
-            }
-            
-            const displayName = {
-              'all': 'All Work',
-              'commercial': 'Commercials',
-              'brand': 'Brand Films',
-              'corporate': 'Corporate',
-              'social': 'Social Media',
-              'uploads': 'Your Uploads'
-            }[category];
-            
-            return (
-              <button
-                key={category}
-                onClick={() => setActiveFilter(category)}
-                className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                  activeFilter === category 
-                    ? 'bg-doodle-purple text-white' 
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-              >
-                {displayName}
-              </button>
-            );
-          })}
-        </div>
+        {/* Empty state message when there are no videos */}
+        {showcaseVideos.length === 0 && (
+          <div className="text-center p-12 bg-gray-50 rounded-lg mb-16">
+            <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
+            <p className="text-gray-600 mt-2">
+              {isAdmin 
+                ? "Upload videos using the Upload Video button above." 
+                : "The admin has not uploaded any videos yet."}
+            </p>
+          </div>
+        )}
+        
+        {/* Filter Buttons - only show if there are videos or admin is logged in */}
+        {(projects.length > 0 || isAdmin) && (
+          <div className="flex flex-wrap justify-center mb-12 gap-2">
+            {['all', 'commercial', 'brand', 'corporate', 'social', 'uploads'].map(category => {
+              // Don't show "uploads" category if there are no uploaded videos and user is not admin
+              if (category === 'uploads' && 
+                  !projects.some(p => p.category === 'uploads') && 
+                  !isAdmin) {
+                return null;
+              }
+              
+              const displayName = {
+                'all': 'All Work',
+                'commercial': 'Commercials',
+                'brand': 'Brand Films',
+                'corporate': 'Corporate',
+                'social': 'Social Media',
+                'uploads': 'Your Uploads'
+              }[category];
+              
+              return (
+                <button
+                  key={category}
+                  onClick={() => setActiveFilter(category)}
+                  className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                    activeFilter === category 
+                      ? 'bg-doodle-purple text-white' 
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
+                >
+                  {displayName}
+                </button>
+              );
+            })}
+          </div>
+        )}
         
         {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -419,7 +394,7 @@ const Portfolio = () => {
                       <video 
                         src={project.videoUrl} 
                         controls 
-                        className="w-full h-full object-contain" // Changed from object-fill to object-contain
+                        className="w-full h-full object-contain"
                         autoPlay
                         playsInline
                       />
@@ -431,12 +406,14 @@ const Portfolio = () => {
           ))}
         </div>
         
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <button className="btn-outline">
-            View All Projects
-          </button>
-        </div>
+        {/* View All Button - only show if there are videos */}
+        {projects.length > 0 && (
+          <div className="text-center mt-12">
+            <button className="btn-outline">
+              View All Projects
+            </button>
+          </div>
+        )}
       </div>
       
       {/* Add custom styling for scrollbar hiding */}
