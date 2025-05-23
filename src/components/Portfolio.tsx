@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Video, LockIcon, CheckCircle, Save } from 'lucide-react';
+import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import VideoUploader from "@/components/VideoUploader";
@@ -50,8 +51,7 @@ type Project = {
   category: string;
   thumbnail: string;
   videoUrl?: string;
-  featured?: boolean;
-  dateAdded?: number;
+  featured?: boolean; // Added featured flag
 };
 
 // Storage key for local storage
@@ -62,15 +62,14 @@ const Portfolio = () => {
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
-  const [isAutoplay, setIsAutoplay] = useState(true);
+  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
-  const [previewLimit, setPreviewLimit] = useState(4);
+  const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
-  const [uploadCategory, setUploadCategory] = useState('fashion');
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+  const [uploadCategory, setUploadCategory] = useState('fashion'); // New state for upload category
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -82,8 +81,7 @@ const Portfolio = () => {
     { id: 'fashion', name: 'Fashion & Modeling' },
     { id: 'fitness', name: 'Fitness & Training' },
     { id: 'events', name: 'Events & Nightlife' },
-    { id: 'brand', name: 'Brand Collaborations' },
-    { id: 'snapinsta', name: 'SnapInsta Videos' } // Added new category for SnapInsta videos
+    { id: 'brand', name: 'Brand Collaborations' }
   ];
   
   // Updated to only include user uploads - no default videos
@@ -95,35 +93,8 @@ const Portfolio = () => {
     if (savedVideos) {
       try {
         const parsedVideos = JSON.parse(savedVideos);
-        
-        // Check for videos with SnapInsta in the title and ensure they're categorized properly
-        const updatedVideos = parsedVideos.map((video: Project) => {
-          if (video.title.includes('SnapInsta') && video.category !== 'snapinsta') {
-            return { ...video, category: 'snapinsta' };
-          }
-          return video;
-        });
-        
-        setProjects(updatedVideos);
-        
-        // Get the timestamp of when videos were last saved
-        const lastSaved = localStorage.getItem(STORAGE_KEY + '_last_saved');
-        if (lastSaved) {
-          setLastSaveTime(new Date(parseInt(lastSaved)));
-        }
-        
-        // Check specifically for SnapInsta videos
-        const snapInstaVideos = updatedVideos.filter((video: Project) => 
-          video.title.includes('SnapInsta') || video.category === 'snapinsta'
-        );
-        
-        if (snapInstaVideos.length > 0) {
-          toast.info(`Loaded ${snapInstaVideos.length} SnapInsta videos`, {
-            description: "Your SnapInsta videos are available in the 'SnapInsta Videos' category"
-          });
-        } else {
-          toast.info(`${updatedVideos.length} videos loaded from your device storage`);
-        }
+        setProjects(parsedVideos);
+        toast.info(`${parsedVideos.length} videos loaded from storage`);
       } catch (error) {
         console.error('Failed to parse saved videos', error);
         toast.error('Failed to load saved videos');
@@ -131,22 +102,24 @@ const Portfolio = () => {
     }
   }, []);
 
+  // Save videos to local storage whenever projects change
+  useEffect(() => {
+    if (projects.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    }
+  }, [projects]);
+
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
-    // Check if the filename contains SnapInsta
-    const isSnapInsta = file.name.toLowerCase().includes('snapinsta');
-    const videoCategory = isSnapInsta ? 'snapinsta' : uploadCategory;
-    
-    // Create a new project with the uploaded video - fix the title and client name
+    // Create a new project with the uploaded video
     const newProject: Project = {
       id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
-      title: isSnapInsta ? file.name.split('.')[0] : "New Upload: " + file.name.split('.')[0],
-      client: isSnapInsta ? "SnapInsta" : "Your Project",
-      category: videoCategory,
+      title: "New Upload: " + file.name.split('.')[0],
+      client: "Your Project",
+      category: uploadCategory, // Use selected category instead of hardcoded "fashion"
       thumbnail: previewUrl,
       videoUrl: previewUrl,
-      featured: projects.length < previewLimit,
-      dateAdded: Date.now()
+      featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
     };
     
     // Add the new project to the list
@@ -155,57 +128,9 @@ const Portfolio = () => {
     
     // Save to local storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
-    const now = Date.now();
-    localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-    setLastSaveTime(new Date(now));
     
-    toast.success(`Video uploaded and saved to ${categories.find(c => c.id === videoCategory)?.name || videoCategory}!`, {
-      description: "Your video is saved in your browser's local storage."
-    });
+    toast.success(`Video uploaded successfully to ${categories.find(c => c.id === uploadCategory)?.name || uploadCategory}!`);
     setIsUploadDialogOpen(false);
-    
-    // If it's a SnapInsta video, set the filter to 'snapinsta' to immediately show it
-    if (isSnapInsta) {
-      setActiveFilter('snapinsta');
-    }
-  };
-
-  // Save videos to local storage whenever projects change
-  useEffect(() => {
-    if (projects.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-      // Save the timestamp when we last saved the videos
-      const now = Date.now();
-      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-      setLastSaveTime(new Date(now));
-    }
-  }, [projects]);
-
-  // Manual save function - for peace of mind
-  const handleManualSave = () => {
-    if (projects.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-      const now = Date.now();
-      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-      setLastSaveTime(new Date(now));
-      
-      // Check for SnapInsta videos
-      const snapInstaVideos = projects.filter(video => 
-        video.title.includes('SnapInsta') || video.category === 'snapinsta'
-      );
-      
-      if (snapInstaVideos.length > 0) {
-        toast.success(`All videos saved, including ${snapInstaVideos.length} SnapInsta videos`, {
-          description: "Your videos are securely stored in your browser's local storage."
-        });
-      } else {
-        toast.success("Videos have been saved to your device", {
-          description: "Your videos are securely stored in your browser's local storage."
-        });
-      }
-    } else {
-      toast.info("No videos to save");
-    }
   };
 
   // Toggle a video's featured status
@@ -235,9 +160,6 @@ const Portfolio = () => {
       
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      const now = Date.now();
-      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-      setLastSaveTime(new Date(now));
       return updated;
     });
   };
@@ -297,9 +219,6 @@ const Portfolio = () => {
       const updated = prev.filter(project => project.id !== id);
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      const now = Date.now();
-      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-      setLastSaveTime(new Date(now));
       toast.success("Video deleted successfully");
       return updated;
     });
@@ -313,97 +232,15 @@ const Portfolio = () => {
       );
       // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      const now = Date.now();
-      localStorage.setItem(STORAGE_KEY + '_last_saved', now.toString());
-      setLastSaveTime(new Date(now));
       toast.success("Category updated");
       return updated;
     });
-  };
-
-  // Format the last save time in a readable way
-  const formatSaveTime = (date: Date | null) => {
-    if (!date) return "Never";
-    
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    
-    // Less than a minute
-    if (diff < 60000) {
-      return "Just now";
-    }
-    
-    // Less than an hour
-    if (diff < 3600000) {
-      const minutes = Math.floor(diff / 60000);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    }
-    
-    // Less than a day
-    if (diff < 86400000) {
-      const hours = Math.floor(diff / 3600000);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    }
-    
-    // Format the date
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
     ? projects
     : projects.filter(project => project.category === activeFilter);
-
-  // Check for SnapInsta videos
-  const snapInstaCount = projects.filter(video => 
-    video.title.toLowerCase().includes('snapinsta') || video.category === 'snapinsta'
-  ).length;
-
-  // Fix: Force video play when thumbnail is visible by adding a useEffect
-  useEffect(() => {
-    const playVisibleVideos = () => {
-      // Play the main feature video if it exists
-      if (showcaseVideos.length > 0) {
-        const mainVideo = document.querySelector('.feature-video') as HTMLVideoElement;
-        if (mainVideo) {
-          mainVideo.play().catch(err => console.log('Autoplay prevented:', err));
-        }
-      }
-      
-      // Make sure all thumbnail videos are set to play
-      const thumbnailVideos = document.querySelectorAll('.thumbnail-video') as NodeListOf<HTMLVideoElement>;
-      thumbnailVideos.forEach((video, index) => {
-        if (index === activeVideoIndex) {
-          video.play().catch(err => console.log('Thumbnail autoplay prevented:', err));
-        } else {
-          video.pause();
-          video.currentTime = 0;
-        }
-      });
-    };
-    
-    // Play videos when they're initially loaded or when the active index changes
-    playVisibleVideos();
-    
-    // Also set up an intersection observer to play videos when they become visible
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.target instanceof HTMLVideoElement) {
-          entry.target.play().catch(err => console.log('Observer autoplay prevented:', err));
-        } else if (entry.target instanceof HTMLVideoElement) {
-          entry.target.pause();
-        }
-      });
-    }, { threshold: 0.5 });
-    
-    // Observe all video elements in the portfolio section
-    const allVideos = document.querySelectorAll('.card-video') as NodeListOf<HTMLVideoElement>;
-    allVideos.forEach(video => observer.observe(video));
-    
-    return () => {
-      observer.disconnect();
-    };
-  }, [showcaseVideos, activeVideoIndex]);
 
   return (
     <section id="portfolio" className="section-padding bg-white">
@@ -415,50 +252,8 @@ const Portfolio = () => {
             Upload and showcase your videos. You can upload new videos using the button below.
           </p>
           
-          {/* Storage Status */}
-          <div className="flex items-center justify-center mt-4 mb-6 text-sm text-gray-500">
-            <div className="flex items-center px-4 py-2 bg-gray-50 rounded-full shadow-sm">
-              {projects.length > 0 ? (
-                <>
-                  <span>
-                    {projects.length} video{projects.length !== 1 ? 's' : ''} saved • 
-                    {snapInstaCount > 0 && ` ${snapInstaCount} SnapInsta • `}
-                    Last saved: {formatSaveTime(lastSaveTime)}
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleManualSave} 
-                    className="ml-2 text-doodle-purple hover:text-doodle-purple/90"
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    Save Now
-                  </Button>
-                </>
-              ) : (
-                <span>No videos saved yet</span>
-              )}
-            </div>
-          </div>
-          
-          {/* SnapInsta Notice - Show if we have SnapInsta videos */}
-          {snapInstaCount > 0 && (
-            <div className="mt-2 mb-4 p-3 bg-doodle-purple/10 rounded-lg mx-auto max-w-2xl">
-              <p className="text-sm">
-                <span className="font-bold">{snapInstaCount} SnapInsta videos</span> are available. 
-                View them in the <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-doodle-purple" 
-                  onClick={() => setActiveFilter('snapinsta')}
-                >
-                  SnapInsta Videos
-                </Button> category.
-              </p>
-            </div>
-          )}
-          
           {/* Upload Video Button - Available to all users */}
-          <div className="mt-6 flex justify-center gap-4 flex-wrap">
+          <div className="mt-6 flex justify-center gap-4">
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
@@ -495,9 +290,6 @@ const Portfolio = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Note: Videos with "SnapInsta" in the name will automatically be categorized as SnapInsta Videos.
-                    </p>
                   </div>
                   <VideoUploader 
                     onVideoUploaded={handleVideoUploaded} 
@@ -505,9 +297,6 @@ const Portfolio = () => {
                     showPreview={true}
                     adminOnly={false} // Set to false so all users can upload
                   />
-                  <p className="text-xs text-gray-500">
-                    Videos will be saved to your device's browser storage and will be available when you return.
-                  </p>
                 </div>
               </DialogContent>
             </Dialog>
@@ -537,9 +326,6 @@ const Portfolio = () => {
                               src={project.videoUrl}
                               className="w-full h-full object-cover"
                               muted
-                              playsInline
-                              loop
-                              autoPlay
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-doodle-purple/30 flex items-center justify-center">
@@ -615,14 +401,13 @@ const Portfolio = () => {
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
               {showcaseVideos[activeVideoIndex] && (
                 <video
-                  key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
+                  key={`feature-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
-                  className="w-full h-full object-cover feature-video"
+                  className="w-full h-full object-cover"
                   autoPlay
                   muted
                   loop
                   playsInline
-                  preload="auto"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
@@ -642,7 +427,7 @@ const Portfolio = () => {
               <div className="flex space-x-6 px-4">
                 {showcaseVideos.map((video, index) => (
                   <div 
-                    key={`thumb-${video.id}-${index}`}
+                    key={`thumb-${video.id}`}
                     className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
                       shadow-lg transition-all duration-500 ease-out transform
                       ${index === activeVideoIndex 
@@ -666,12 +451,17 @@ const Portfolio = () => {
                   >
                     <video 
                       src={video.videoUrl} 
-                      className="w-full h-full object-cover thumbnail-video"
+                      className="w-full h-full object-cover"
                       muted
                       loop
-                      playsInline
                       autoPlay={index === activeVideoIndex}
-                      preload="auto"
+                      onLoadedMetadata={(e) => {
+                        if (index !== activeVideoIndex) {
+                          (e.target as HTMLVideoElement).pause();
+                        } else {
+                          (e.target as HTMLVideoElement).play();
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
                       <div className="p-3">
@@ -694,31 +484,21 @@ const Portfolio = () => {
             >
               Upload Now
             </Button>
-            <p className="text-xs text-gray-500 mt-4">
-              Your videos will be saved to your device's browser storage
-            </p>
           </div>
         )}
         
         {/* Updated Category Tabs */}
         {projects.length > 0 && (
           <div className="mb-12">
-            <Tabs defaultValue={activeFilter} value={activeFilter} onValueChange={setActiveFilter}>
+            <Tabs defaultValue="all" onValueChange={setActiveFilter}>
               <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent">
                 {categories.map((cat) => (
                   <TabsTrigger 
                     key={cat.id} 
                     value={cat.id}
-                    className={`px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white ${
-                      cat.id === 'snapinsta' && snapInstaCount > 0 ? 'relative' : ''
-                    }`}
+                    className="px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
                   >
                     {cat.name}
-                    {cat.id === 'snapinsta' && snapInstaCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {snapInstaCount}
-                      </span>
-                    )}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -727,19 +507,13 @@ const Portfolio = () => {
                 <TabsContent key={cat.id} value={cat.id} className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
-                      <Card key={`card-${project.id}`} className={`group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg ${
-                        project.title.toLowerCase().includes('snapinsta') || project.category === 'snapinsta' 
-                          ? 'ring-2 ring-doodle-purple' 
-                          : ''
-                      }`}>
+                      <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
                         {/* Project Thumbnail */}
                         <video
                           src={project.videoUrl}
-                          className="w-full h-full object-cover card-video"
+                          className="w-full h-full object-cover"
                           muted
                           loop
-                          playsInline
-                          preload="auto"
                           onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                           onMouseOut={(e) => {
                             const video = e.target as HTMLVideoElement;
@@ -771,7 +545,6 @@ const Portfolio = () => {
                                     controls 
                                     className="w-full h-full object-contain"
                                     autoPlay
-                                    playsInline
                                   />
                                 </div>
                               </DialogContent>
@@ -823,13 +596,6 @@ const Portfolio = () => {
                         {project.featured && (
                           <div className="absolute top-2 right-2 bg-doodle-purple text-white text-xs px-2 py-1 rounded-full">
                             Featured
-                          </div>
-                        )}
-                        
-                        {/* SnapInsta badge */}
-                        {(project.title.toLowerCase().includes('snapinsta') || project.category === 'snapinsta') && (
-                          <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                            SnapInsta
                           </div>
                         )}
                       </Card>
