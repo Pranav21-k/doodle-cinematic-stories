@@ -35,6 +35,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Portfolio item type
 type Project = {
@@ -62,6 +69,7 @@ const Portfolio = () => {
   const [adminPassword, setAdminPassword] = useState("");
   const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState('fashion'); // New state for upload category
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -108,7 +116,7 @@ const Portfolio = () => {
       id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
       title: "New Upload: " + file.name.split('.')[0],
       client: "Your Project",
-      category: "fashion", // Default category for new uploads
+      category: uploadCategory, // Use selected category instead of hardcoded "fashion"
       thumbnail: previewUrl,
       videoUrl: previewUrl,
       featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
@@ -121,7 +129,7 @@ const Portfolio = () => {
     // Save to local storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
     
-    toast.success("Video uploaded successfully!");
+    toast.success(`Video uploaded successfully to ${categories.find(c => c.id === uploadCategory)?.name || uploadCategory}!`);
     setIsUploadDialogOpen(false);
   };
 
@@ -157,7 +165,6 @@ const Portfolio = () => {
   };
 
   // Get featured videos for the carousel, limited to previewLimit
-  // If not enough featured videos, supplement with non-featured ones
   const showcaseVideos = React.useMemo(() => {
     const featured = projects.filter(p => p.featured);
     
@@ -261,7 +268,29 @@ const Portfolio = () => {
                     Upload your video to add it to your portfolio
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
+                
+                {/* Add category selection before upload */}
+                <div className="py-4 space-y-4">
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-medium mb-1">
+                      Select Category
+                    </label>
+                    <Select
+                      value={uploadCategory}
+                      onValueChange={setUploadCategory}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.slice(1).map((category) => ( // Skip "All Videos"
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <VideoUploader 
                     onVideoUploaded={handleVideoUploaded} 
                     buttonText="Select Video File"
