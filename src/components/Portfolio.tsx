@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import VideoUploader from "@/components/VideoUploader";
 import {
   Dialog,
   DialogContent,
@@ -63,13 +61,11 @@ const Portfolio = () => {
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
-  const [uploadCategory, setUploadCategory] = useState('fashion'); // New state for upload category
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -109,37 +105,6 @@ const Portfolio = () => {
       console.log('Videos saved to localStorage:', projects.length);
     }
   }, [projects]);
-
-  // Handler for new video uploads
-  const handleVideoUploaded = (file: File, previewUrl: string) => {
-    // Format the title by removing "New Upload:" prefix and file extension
-    let title = file.name;
-    if (title.includes('.')) {
-      title = title.split('.')[0];
-    }
-    
-    // Create a new project with the uploaded video
-    const newProject: Project = {
-      id: Date.now(), // Use timestamp for more unique IDs
-      title: title,
-      client: "Your Project",
-      category: uploadCategory,
-      thumbnail: previewUrl,
-      videoUrl: previewUrl,
-      featured: projects.length < previewLimit // Auto-feature if we have fewer than previewLimit videos
-    };
-    
-    // Add the new project to the list
-    const updatedProjects = [newProject, ...projects];
-    setProjects(updatedProjects);
-    
-    // Ensure we save to local storage immediately after upload
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
-    console.log('New video saved:', title);
-    
-    toast.success(`Video "${title}" uploaded and saved successfully!`);
-    setIsUploadDialogOpen(false);
-  };
 
   // Toggle a video's featured status
   const toggleFeaturedVideo = (id: number) => {
@@ -219,17 +184,6 @@ const Portfolio = () => {
     setIsAdmin(false);
     setAdminPassword("");
     toast.info("Logged out of admin mode");
-  };
-
-  // Handle video deletion
-  const handleDeleteVideo = (id: number) => {
-    setProjects(prev => {
-      const updated = prev.filter(project => project.id !== id);
-      // Save updated projects to local storage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      toast.success("Video deleted successfully");
-      return updated;
-    });
   };
 
   // Handle category update
@@ -321,60 +275,12 @@ const Portfolio = () => {
         <div className="text-center mb-16">
           <h2 className="section-title animate-fade-in">Your Videos</h2>
           <p className="section-subtitle max-w-2xl mx-auto">
-            Upload and showcase your videos. You can upload new videos using the button below.
+            Watch and explore videos in our portfolio.
           </p>
           
-          {/* Upload Video Button - Available to all users */}
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
-                  <Video className="mr-2 h-4 w-4" />
-                  Upload Video
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Upload Video</DialogTitle>
-                  <DialogDescription>
-                    Upload your video to add it to your portfolio
-                  </DialogDescription>
-                </DialogHeader>
-                
-                {/* Add category selection before upload */}
-                <div className="py-4 space-y-4">
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium mb-1">
-                      Select Category
-                    </label>
-                    <Select
-                      value={uploadCategory}
-                      onValueChange={setUploadCategory}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.slice(1).map((category) => ( // Skip "All Videos"
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <VideoUploader 
-                    onVideoUploaded={handleVideoUploaded} 
-                    buttonText="Select Video File"
-                    showPreview={true}
-                    adminOnly={false} // Set to false so all users can upload
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-            {/* Manage Featured Videos Button */}
-            {projects.length > 0 && (
+          {/* Manage Featured Videos Button */}
+          {projects.length > 0 && (
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
               <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
@@ -426,60 +332,26 @@ const Portfolio = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-            )}
-            
-            {/* Export/Import Video Buttons */}
-            {projects.length > 0 && (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={exportVideos}
-                  className="flex items-center gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" x2="12" y1="15" y2="3" />
-                  </svg>
-                  Export Videos
-                </Button>
-                
-                <div className="relative">
-                  <input
-                    id="import-videos"
-                    type="file"
-                    accept=".json"
-                    onChange={importVideos}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload">
+              
+              {/* Export/Import Video Buttons */}
+              {projects.length > 0 && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={exportVideos}
+                    className="flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" x2="12" y1="3" y2="15" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" x2="12" y1="15" y2="3" />
                     </svg>
-                    Import Videos
+                    Export Videos
                   </Button>
-                </div>
-              </>
-            )}
-            
-            {/* Clear All Videos Button - Only show if there are videos */}
-            {projects.length > 0 && (
-              <Button 
-                variant="destructive" 
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete all videos? This cannot be undone.")) {
-                    setProjects([]);
-                    localStorage.removeItem(STORAGE_KEY);
-                    toast.success("All videos cleared");
-                  }
-                }}
-              >
-                Clear All Videos
-              </Button>
-            )}
-          </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Immersive Video Carousel - Enhanced Style */}
@@ -587,14 +459,10 @@ const Portfolio = () => {
         ) : (
           <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-xl mb-12">
             <Video className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium mb-2">No videos yet</h3>
-            <p className="text-gray-500 mb-6">Upload your first video to get started</p>
-            <Button 
-              onClick={() => setIsUploadDialogOpen(true)}
-              className="bg-doodle-purple hover:bg-doodle-purple/90"
-            >
-              Upload Now
-            </Button>
+            <h3 className="text-xl font-medium mb-2">No videos available</h3>
+            <p className="text-gray-500 mb-6">
+              Please contact the administrator to add videos to the portfolio.
+            </p>
           </div>
         )}
         
@@ -665,6 +533,14 @@ const Portfolio = () => {
                               </DialogContent>
                             </Dialog>
                             
+                            {/* Featured toggle button */}
+                            <button 
+                              className={`px-3 py-1.5 ${project.featured ? 'bg-doodle-purple text-white' : 'bg-white/20 text-white'} text-sm rounded-full hover:bg-doodle-purple/70 hover:text-white`}
+                              onClick={() => toggleFeaturedVideo(project.id)}
+                            >
+                              {project.featured ? 'Featured' : 'Feature Video'}
+                            </button>
+                            
                             {/* Category selector */}
                             <Dialog>
                               <DialogTrigger asChild>
@@ -692,18 +568,6 @@ const Portfolio = () => {
                                 </div>
                               </DialogContent>
                             </Dialog>
-                            
-                            {/* Delete button */}
-                            <button 
-                              className="ml-auto px-3 py-1.5 bg-red-500 text-white text-sm rounded-full hover:bg-red-600"
-                              onClick={() => {
-                                if (confirm("Are you sure you want to delete this video?")) {
-                                  handleDeleteVideo(project.id);
-                                }
-                              }}
-                            >
-                              Delete Video
-                            </button>
                           </div>
                         </div>
                         
@@ -718,7 +582,7 @@ const Portfolio = () => {
                     
                     {(cat.id === 'all' ? projects.length === 0 : projects.filter(p => p.category === cat.id).length === 0) && (
                       <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
-                        <p>No videos in this category. Upload some!</p>
+                        <p>No videos in this category.</p>
                       </div>
                     )}
                   </div>
