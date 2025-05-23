@@ -1,10 +1,11 @@
 
 import { useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, FileType, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
+import { Progress } from '@/components/ui/progress'; // Import Progress component
 
 type VideoUploaderProps = {
   onVideoUploaded?: (file: File, previewUrl: string) => void;
@@ -22,7 +23,7 @@ const VideoUploader = ({
   className, 
   buttonText = "Upload Video", 
   showPreview = true,
-  adminOnly = true, // Default to true - only admins can upload
+  adminOnly = false, // Default to false - allow all users to upload
   multiple = false // Default to single upload
 }: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -30,7 +31,6 @@ const VideoUploader = ({
   const [videoPreviews, setVideoPreviews] = useState<{file: File, url: string}[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  // In a real app, you would check if the current user is an admin
   const [isAdmin, setIsAdmin] = useState(true); // Default to true for testing
 
   // Don't render the component if it's admin-only and the user is not an admin
@@ -79,35 +79,20 @@ const VideoUploader = ({
       return;
     }
 
-    // Check file size (limited to 100MB)
-    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-    if (file.size > maxSize) {
-      toast.error('Video file is too large. Please upload a file smaller than 100MB.');
-      return;
-    }
+    // Display file info for better user feedback
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    toast.info(`Processing "${file.name}" (${fileSizeMB} MB)`);
 
-    // Simulate upload progress
-    setIsUploading(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
+    // Simulate upload progress - in a real app, this would be an actual upload
+    simulateUpload(file, (previewUrl) => {
+      setVideoPreview(previewUrl);
+      toast.success(`"${file.name}" uploaded successfully!`);
       
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsUploading(false);
-        
-        // Create a URL for the video preview
-        const previewUrl = URL.createObjectURL(file);
-        setVideoPreview(previewUrl);
-        toast.success('Video uploaded successfully!');
-        
-        // Call the callback if provided
-        if (onVideoUploaded) {
-          onVideoUploaded(file, previewUrl);
-        }
+      // Call the callback if provided
+      if (onVideoUploaded) {
+        onVideoUploaded(file, previewUrl);
       }
-    }, 300);
+    });
   };
 
   const handleMultipleVideoFiles = (files: File[]) => {
@@ -119,53 +104,78 @@ const VideoUploader = ({
       return;
     }
     
-    // Check file sizes
-    const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-    const oversizedFiles = videoFiles.filter(file => file.size > maxSize);
-    
-    if (oversizedFiles.length > 0) {
-      toast.error(`${oversizedFiles.length} video(s) exceed the 100MB size limit and will be skipped.`);
+    // Check for any non-video files
+    if (videoFiles.length < files.length) {
+      toast.warning(`${files.length - videoFiles.length} file(s) skipped (not video format)`);
     }
     
-    // Keep only valid files
-    const validFiles = videoFiles.filter(file => file.size <= maxSize);
-    
-    if (validFiles.length === 0) {
-      return;
-    }
+    // Display total upload size for better user feedback
+    const totalSizeMB = videoFiles.reduce((total, file) => total + file.size, 0) / (1024 * 1024);
+    toast.info(`Processing ${videoFiles.length} videos (${totalSizeMB.toFixed(2)} MB total)`);
     
     // Simulate upload progress
-    setIsUploading(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
+    simulateUpload(videoFiles, (newPreviews) => {
+      setVideoPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
+      toast.success(`${videoFiles.length} video(s) uploaded successfully!`);
       
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsUploading(false);
-        
-        // Create preview URLs for all files
-        const newPreviews = validFiles.map(file => ({
-          file,
-          url: URL.createObjectURL(file)
-        }));
-        
-        setVideoPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
-        toast.success(`${validFiles.length} video(s) uploaded successfully!`);
-        
-        // Call the callback if provided
-        if (onVideosUploaded) {
-          onVideosUploaded(newPreviews);
-        }
+      // Call the callback if provided
+      if (onVideosUploaded) {
+        onVideosUploaded(newPreviews);
       }
-    }, 200); // Speed up upload simulation a bit
+    });
+  };
+
+  const simulateUpload = (
+    filesInput: File | File[], 
+    onComplete: (result: string | {file: File, url: string}[]) => void
+  ) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const files = Array.isArray(filesInput) ? filesInput : [filesInput];
+    
+    // Higher upload speed for better UX, but still show progress
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        const newProgress = prev + (100 - prev) * 0.2; // Faster progress curve
+        
+        if (newProgress >= 99) {
+          clearInterval(interval);
+          
+          // Small delay before completing to show 100%
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadProgress(100);
+            
+            // Create preview URLs - without compression
+            if (Array.isArray(filesInput)) {
+              const previews = files.map(file => ({
+                file,
+                url: URL.createObjectURL(file) // Direct object URL without compression
+              }));
+              onComplete(previews);
+            } else {
+              onComplete(URL.createObjectURL(files[0]));
+            }
+          }, 300);
+        }
+        
+        return newProgress;
+      });
+    }, 100);
   };
 
   const resetUploader = () => {
     setVideoPreview(null);
     setVideoPreviews([]);
     setUploadProgress(0);
+  };
+
+  // Format file size in a user-friendly way
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
   return (
@@ -178,9 +188,9 @@ const VideoUploader = ({
       {(!videoPreview && videoPreviews.length === 0) ? (
         <div 
           className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center transition-colors 
-            ${isDragging ? 'border-doodle-purple bg-purple-50' : 'border-gray-300'}`}
+            ${isDragging ? 'border-doodle-purple bg-purple-50/20' : 'border-gray-300'}`}
         >
-          <Upload className="w-12 h-12 text-gray-400 mb-4" />
+          <Upload className={`w-12 h-12 mb-4 ${isDragging ? 'text-doodle-purple' : 'text-gray-400'} transition-colors`} />
           <h3 className="text-lg font-semibold mb-2">{buttonText}</h3>
           <p className="text-sm text-gray-500 text-center mb-4">
             {multiple ? 'Select multiple videos or drag & drop them here' : 'Drag & drop your video here or click to browse'}
@@ -196,45 +206,61 @@ const VideoUploader = ({
               className="cursor-pointer"
               multiple={multiple}
             />
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Max size: 100MB per file. Supported formats: MP4, MOV, WebM, etc.
+            </p>
           </div>
           
           {isUploading && (
-            <div className="w-full max-w-xs mt-4">
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-doodle-purple" 
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
+            <div className="w-full max-w-xs mt-6">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Uploading...</span>
+                <span>{Math.round(uploadProgress)}%</span>
               </div>
-              <p className="text-xs text-center mt-1">{uploadProgress}% uploaded</p>
+              <Progress value={uploadProgress} className="h-2" />
             </div>
           )}
         </div>
       ) : showPreview ? (
         <div className="space-y-4">
           {videoPreview && !multiple && (
-            <div className="relative rounded-lg overflow-hidden">
+            <div className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
               <video 
                 src={videoPreview} 
                 controls 
-                className="w-full h-64 object-cover"
+                className="w-full h-64 object-contain"
               />
+              <div className="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Uploaded successfully
+              </div>
             </div>
           )}
           
           {videoPreviews.length > 0 && multiple && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
               {videoPreviews.map((video, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden">
+                <div key={index} className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
                   <video 
                     src={video.url} 
                     muted
                     className="w-full h-32 object-cover"
                     onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                    onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
+                    onMouseOut={(e) => {
+                      const player = e.target as HTMLVideoElement;
+                      player.pause();
+                      player.currentTime = 0;
+                    }}
                   />
-                  <div className="absolute bottom-2 right-2 text-white text-xs bg-black/50 px-2 py-1 rounded">
-                    {video.file.name.substring(0, 15)}...
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white text-xs truncate pr-2 flex-1">
+                        {video.file.name}
+                      </span>
+                      <span className="text-white/80 text-xs whitespace-nowrap">
+                        {formatFileSize(video.file.size)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -252,8 +278,11 @@ const VideoUploader = ({
           </div>
         </div>
       ) : (
-        <div className="text-center">
-          <p className="text-green-600 mb-2">
+        <div className="text-center py-6">
+          <div className="flex items-center justify-center mb-3 text-green-600">
+            <CheckCircle2 className="w-8 h-8 mr-2" />
+          </div>
+          <p className="text-green-600 font-medium mb-2">
             {multiple && videoPreviews.length > 0 
               ? `${videoPreviews.length} videos uploaded successfully!` 
               : 'Video uploaded successfully!'}
