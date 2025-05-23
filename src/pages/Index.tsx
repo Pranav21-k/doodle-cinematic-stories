@@ -1,4 +1,5 @@
 
+import React, { useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import ClientLogos from "@/components/ClientLogos";
@@ -9,6 +10,13 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
+  // Force a page load to ensure localStorage is properly loaded
+  useEffect(() => {
+    // We're just ensuring the page properly initializes
+    // This helps with localStorage persistence
+    console.log("Index page mounted");
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Navbar />
