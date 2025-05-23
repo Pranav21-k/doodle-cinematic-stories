@@ -152,7 +152,33 @@ const Portfolio = () => {
           </div>
         ) : (
           <>
-            {/* Video Grid when we have videos */}
+            {/* Filter Buttons - only show if there are videos */}
+            <div className="flex flex-wrap justify-center mb-12 gap-2">
+              {[
+                { id: 'all', label: 'All Work' },
+                { id: 'fashion', label: 'Fashion & Modeling' },
+                { id: 'fitness', label: 'Fitness & Training' },
+                { id: 'events', label: 'Events & Nightlife' },
+                { id: 'brand', label: 'Brand Collaborations' },
+                { id: 'uploads', label: 'Uploaded Videos' }
+              ].map(category => {
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveFilter(category.id)}
+                    className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                      activeFilter === category.id 
+                        ? 'bg-doodle-purple text-white' 
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    {category.label}
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Video Grid when we have videos - restored to previous styling */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
               {filteredProjects.map((project) => (
                 <div key={project.id} className="relative rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl">
@@ -161,6 +187,7 @@ const Portfolio = () => {
                     poster={project.thumbnail}
                     className="w-full h-64 object-cover"
                     controls
+                    preload="metadata"
                   />
                   <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
                     <BadgeCheck className="w-3 h-3 mr-1" />
@@ -174,34 +201,6 @@ const Portfolio = () => {
               ))}
             </div>
           </>
-        )}
-        
-        {/* Filter Buttons - only show if there are videos */}
-        {projects.length > 0 && (
-          <div className="flex flex-wrap justify-center mb-12 gap-2">
-            {[
-              { id: 'all', label: 'All Work' },
-              { id: 'fashion', label: 'Fashion & Modeling' },
-              { id: 'fitness', label: 'Fitness & Training' },
-              { id: 'events', label: 'Events & Nightlife' },
-              { id: 'brand', label: 'Brand Collaborations' },
-              { id: 'uploads', label: 'Uploaded Videos' }
-            ].map(category => {
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveFilter(category.id)}
-                  className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                    activeFilter === category.id 
-                      ? 'bg-doodle-purple text-white' 
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  {category.label}
-                </button>
-              );
-            })}
-          </div>
         )}
         
         {/* Custom styling remains the same */}
