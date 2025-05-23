@@ -54,44 +54,44 @@ const Portfolio = () => {
   // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
-  // Sample portfolio projects with real video URLs
+  // Updated sample portfolio projects with new categories
   const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
-      title: "Brand Story Campaign",
-      client: "TechVision",
-      category: "commercial",
+      title: "Summer Collection",
+      client: "Elite Models",
+      category: "fashion",
       thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     },
     {
       id: 2,
-      title: "Product Launch",
-      client: "Innovate Sports",
-      category: "brand",
+      title: "Workout Series",
+      client: "Fitness First",
+      category: "fitness",
       thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     },
     {
       id: 3,
-      title: "Corporate Overview",
-      client: "Global Finance",
-      category: "corporate",
+      title: "Fashion Week Highlights",
+      client: "Milan Fashion",
+      category: "fashion",
       thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     },
     {
       id: 4,
-      title: "Social Media Campaign",
-      client: "Fashion Forward",
-      category: "social",
+      title: "Club Opening",
+      client: "Midnight Lounge",
+      category: "events",
       thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     },
     {
       id: 5,
-      title: "App Promo Video",
-      client: "FitnessPro",
+      title: "Brand Partnership",
+      client: "SportWear Co",
       category: "brand",
       thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
@@ -343,9 +343,9 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Filter Buttons */}
+        {/* Updated Filter Buttons with new categories */}
         <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {['all', 'commercial', 'brand', 'corporate', 'social', 'uploads'].map(category => {
+          {['all', 'fashion', 'fitness', 'events', 'brand', 'uploads'].map(category => {
             // Don't show "uploads" category if there are no uploaded videos and user is not admin
             if (category === 'uploads' && 
                 !projects.some(p => p.category === 'uploads') && 
@@ -355,10 +355,10 @@ const Portfolio = () => {
             
             const displayName = {
               'all': 'All Work',
-              'commercial': 'Commercials',
-              'brand': 'Brand Films',
-              'corporate': 'Corporate',
-              'social': 'Social Media',
+              'fashion': 'Fashion & Modeling',
+              'fitness': 'Fitness & Training',
+              'events': 'Events & Nightlife',
+              'brand': 'Brand Collaborations',
               'uploads': 'Your Uploads'
             }[category];
             
