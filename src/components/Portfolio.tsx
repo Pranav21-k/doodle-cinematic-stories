@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle, Save } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -138,10 +137,10 @@ const Portfolio = () => {
     const isSnapInsta = file.name.toLowerCase().includes('snapinsta');
     const videoCategory = isSnapInsta ? 'snapinsta' : uploadCategory;
     
-    // Create a new project with the uploaded video
+    // Create a new project with the uploaded video - fix the title and client name
     const newProject: Project = {
       id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
-      title: "New Upload: " + file.name.split('.')[0],
+      title: isSnapInsta ? file.name.split('.')[0] : "New Upload: " + file.name.split('.')[0],
       client: isSnapInsta ? "SnapInsta" : "Your Project",
       category: videoCategory,
       thumbnail: previewUrl,
@@ -616,13 +615,14 @@ const Portfolio = () => {
             <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl">
               {showcaseVideos[activeVideoIndex] && (
                 <video
-                  key={`feature-${showcaseVideos[activeVideoIndex]?.id}`}
+                  key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex]?.videoUrl}
                   className="w-full h-full object-cover feature-video"
                   autoPlay
                   muted
                   loop
                   playsInline
+                  preload="auto"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end">
@@ -642,7 +642,7 @@ const Portfolio = () => {
               <div className="flex space-x-6 px-4">
                 {showcaseVideos.map((video, index) => (
                   <div 
-                    key={`thumb-${video.id}`}
+                    key={`thumb-${video.id}-${index}`}
                     className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
                       shadow-lg transition-all duration-500 ease-out transform
                       ${index === activeVideoIndex 
@@ -671,6 +671,7 @@ const Portfolio = () => {
                       loop
                       playsInline
                       autoPlay={index === activeVideoIndex}
+                      preload="auto"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
                       <div className="p-3">
@@ -726,7 +727,7 @@ const Portfolio = () => {
                 <TabsContent key={cat.id} value={cat.id} className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
-                      <Card key={project.id} className={`group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg ${
+                      <Card key={`card-${project.id}`} className={`group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg ${
                         project.title.toLowerCase().includes('snapinsta') || project.category === 'snapinsta' 
                           ? 'ring-2 ring-doodle-purple' 
                           : ''
