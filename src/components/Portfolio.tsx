@@ -54,7 +54,7 @@ const Portfolio = () => {
   // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
-  // Empty portfolio projects - removed all existing videos
+  // Empty portfolio projects - removed all videos
   const [projects, setProjects] = useState<Project[]>([]);
 
   // Handler for new video uploads
@@ -220,123 +220,19 @@ const Portfolio = () => {
           </div>
         </div>
         
-        {/* Immersive Video Carousel - Only shown if there are videos */}
-        {showcaseVideos.length > 0 && (
-          <div className="mb-16 relative">
-            {/* Autoplay Toggle */}
-            <div className="flex justify-end mb-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsAutoplay(!isAutoplay)}
-                className="flex items-center gap-2 z-10"
-              >
-                <Video size={16} />
-                {isAutoplay ? 'Stop Rotation' : 'Start Rotation'}
-              </Button>
-            </div>
-            
-            {/* Main Feature Video */}
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 shadow-xl bg-black">
-              {showcaseVideos[activeVideoIndex] && (
-                <video
-                  key={`feature-${activeVideoIndex}`}
-                  src={showcaseVideos[activeVideoIndex]?.videoUrl}
-                  className="w-full h-full object-contain"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 flex items-end pointer-events-none">
-                <div className="p-6">
-                  <h3 className="text-white text-2xl font-bold">
-                    {showcaseVideos[activeVideoIndex]?.title}
-                  </h3>
-                  <p className="text-white/80">
-                    {showcaseVideos[activeVideoIndex]?.client}
-                  </p>
-                </div>
-              </div>
-              <div className="absolute top-4 right-4 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                <BadgeCheck className="w-3 h-3 mr-1" />
-                Premium Quality
-              </div>
-            </div>
-            
-            {/* Horizontally Scrolling Video Thumbnails */}
-            <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
-              <div className="flex space-x-6 px-4">
-                {showcaseVideos.map((video, index) => (
-                  <div 
-                    key={`thumb-${video.id}`}
-                    className={`flex-shrink-0 w-60 h-40 rounded-lg overflow-hidden cursor-pointer 
-                      shadow-lg transition-all duration-500 ease-out transform bg-black
-                      ${index === activeVideoIndex 
-                        ? 'ring-4 ring-doodle-purple scale-110 z-10' 
-                        : 'opacity-70 hover:opacity-90'
-                      }
-                      ${index % 2 === 0 ? 'rotate-2' : '-rotate-2'}
-                      ${index === activeVideoIndex - 1 || index === activeVideoIndex + 1 
-                        ? 'translate-y-3' 
-                        : index === activeVideoIndex - 2 || index === activeVideoIndex + 2
-                          ? 'translate-y-4' 
-                          : 'translate-y-0'
-                      }
-                    `}
-                    onClick={() => {
-                      setActiveVideoIndex(index);
-                    }}
-                    style={{
-                      transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                    }}
-                  >
-                    <video 
-                      src={video.videoUrl} 
-                      className="w-full h-full object-contain"
-                      muted
-                      loop
-                      autoPlay={index === activeVideoIndex}
-                      onLoadedMetadata={(e) => {
-                        if (index !== activeVideoIndex) {
-                          (e.target as HTMLVideoElement).pause();
-                        } else {
-                          (e.target as HTMLVideoElement).play();
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70 flex items-end">
-                      <div className="p-3">
-                        <p className="text-white text-sm font-bold truncate">{video.title}</p>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-1 py-0.5 rounded-full flex items-center">
-                      <BadgeCheck className="w-3 h-3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Empty state message when there are no videos */}
-        {showcaseVideos.length === 0 && (
-          <div className="text-center p-12 bg-gray-50 rounded-lg mb-16">
-            <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
-            <p className="text-gray-600 mt-2">
-              {isAdmin 
-                ? "Upload premium quality videos using the Upload button above." 
-                : "The admin has not uploaded any videos yet."}
-            </p>
-          </div>
-        )}
+        {/* Empty state message when there are no videos - showing this by default now */}
+        <div className="text-center p-12 bg-gray-50 rounded-lg mb-16">
+          <Video className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-xl font-medium text-gray-900">No videos in portfolio</h3>
+          <p className="text-gray-600 mt-2">
+            {isAdmin 
+              ? "Upload premium quality videos using the Upload button above." 
+              : "The admin has not uploaded any videos yet."}
+          </p>
+        </div>
         
         {/* Filter Buttons - only show if there are videos or admin is logged in */}
-        {(projects.length > 0 || isAdmin) && (
+        {isAdmin && (
           <div className="flex flex-wrap justify-center mb-12 gap-2">
             {[
               { id: 'all', label: 'All Work' },
@@ -345,13 +241,6 @@ const Portfolio = () => {
               { id: 'events', label: 'Events & Nightlife' },
               { id: 'brand', label: 'Brand Collaborations' }
             ].map(category => {
-              // Don't show "uploads" category if there are no uploaded videos and user is not admin
-              if (category.id === 'uploads' && 
-                  !projects.some(p => p.category === 'uploads') && 
-                  !isAdmin) {
-                return null;
-              }
-              
               return (
                 <button
                   key={category.id}
@@ -369,85 +258,24 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Portfolio Grid */}
+        {/* Portfolio Grid - No videos to show */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProjects.map((project) => (
-            <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover border-0 shadow-lg bg-black">
-              {/* Project Thumbnail */}
-              <video
-                src={project.videoUrl}
-                className="w-full h-full object-contain"
-                muted
-                loop
-                onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                onMouseOut={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  video.pause();
-                  video.currentTime = 0;
-                }}
-              />
-              
-              {/* Premium Quality Badge */}
-              <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center z-10">
-                <BadgeCheck className="w-3 h-3 mr-1" />
-                Premium
-              </div>
-              
-              {/* Overlay with information */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <h3 className="text-white text-xl font-bold">{project.title}</h3>
-                <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
-                
-                {/* Play button */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                      <Play size={20} />
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>{project.title}</DialogTitle>
-                      <DialogDescription>Premium quality video</DialogDescription>
-                    </DialogHeader>
-                    <div className="aspect-video w-full bg-black">
-                      <video 
-                        src={project.videoUrl} 
-                        controls 
-                        className="w-full h-full object-contain"
-                        autoPlay
-                        playsInline
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </Card>
-          ))}
+          {/* Empty grid - videos have been removed */}
         </div>
         
-        {/* View All Button - only show if there are videos */}
-        {projects.length > 0 && (
-          <div className="text-center mt-12">
-            <button className="btn-outline">
-              View All Projects
-            </button>
-          </div>
-        )}
+        {/* Custom styling remains the same */}
+        <style>
+          {`
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          `}
+        </style>
       </div>
-      
-      {/* Add custom styling for scrollbar hiding */}
-      <style>
-        {`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        `}
-      </style>
     </section>
   );
 };
