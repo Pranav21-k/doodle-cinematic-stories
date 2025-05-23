@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
