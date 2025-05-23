@@ -343,8 +343,7 @@ const Portfolio = () => {
               { id: 'fashion', label: 'Fashion & Modeling' },
               { id: 'fitness', label: 'Fitness & Training' },
               { id: 'events', label: 'Events & Nightlife' },
-              { id: 'brand', label: 'Brand Collaborations' },
-              { id: 'uploads', label: 'Your Uploads' }
+              { id: 'brand', label: 'Brand Collaborations' }
             ].map(category => {
               // Don't show "uploads" category if there are no uploaded videos and user is not admin
               if (category.id === 'uploads' && 
