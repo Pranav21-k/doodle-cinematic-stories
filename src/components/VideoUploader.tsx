@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
-import { Progress } from '@/components/ui/progress'; // Import Progress component
+import { Progress } from '@/components/ui/progress'; 
 
 type VideoUploaderProps = {
   onVideoUploaded?: (file: File, previewUrl: string) => void;
@@ -84,7 +84,7 @@ const VideoUploader = ({
     toast.info(`Processing "${file.name}" (${fileSizeMB} MB)`);
 
     // Simulate upload progress - in a real app, this would be an actual upload
-    simulateUpload(file, (previewUrl) => {
+    simulateUploadSingle(file, (previewUrl) => {
       setVideoPreview(previewUrl);
       toast.success(`"${file.name}" uploaded successfully!`);
       
@@ -114,7 +114,7 @@ const VideoUploader = ({
     toast.info(`Processing ${videoFiles.length} videos (${totalSizeMB.toFixed(2)} MB total)`);
     
     // Simulate upload progress
-    simulateUpload(videoFiles, (newPreviews) => {
+    simulateUploadMultiple(videoFiles, (newPreviews) => {
       setVideoPreviews(prevPreviews => [...prevPreviews, ...newPreviews]);
       toast.success(`${videoFiles.length} video(s) uploaded successfully!`);
       
@@ -125,14 +125,41 @@ const VideoUploader = ({
     });
   };
 
-  const simulateUpload = (
-    filesInput: File | File[], 
-    onComplete: (result: string | {file: File, url: string}[]) => void
-  ) => {
+  // Separate functions for single and multiple uploads to fix type issues
+  const simulateUploadSingle = (file: File, onComplete: (result: string) => void) => {
     setIsUploading(true);
     setUploadProgress(0);
     
-    const files = Array.isArray(filesInput) ? filesInput : [filesInput];
+    // Higher upload speed for better UX, but still show progress
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        const newProgress = prev + (100 - prev) * 0.2; // Faster progress curve
+        
+        if (newProgress >= 99) {
+          clearInterval(interval);
+          
+          // Small delay before completing to show 100%
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadProgress(100);
+            
+            // Create preview URL - without compression
+            const previewUrl = URL.createObjectURL(file);
+            onComplete(previewUrl);
+          }, 300);
+        }
+        
+        return newProgress;
+      });
+    }, 100);
+  };
+
+  const simulateUploadMultiple = (
+    files: File[], 
+    onComplete: (result: {file: File, url: string}[]) => void
+  ) => {
+    setIsUploading(true);
+    setUploadProgress(0);
     
     // Higher upload speed for better UX, but still show progress
     const interval = setInterval(() => {
@@ -148,15 +175,11 @@ const VideoUploader = ({
             setUploadProgress(100);
             
             // Create preview URLs - without compression
-            if (Array.isArray(filesInput)) {
-              const previews = files.map(file => ({
-                file,
-                url: URL.createObjectURL(file) // Direct object URL without compression
-              }));
-              onComplete(previews);
-            } else {
-              onComplete(URL.createObjectURL(files[0]));
-            }
+            const previews = files.map(file => ({
+              file,
+              url: URL.createObjectURL(file) // Direct object URL without compression
+            }));
+            onComplete(previews);
           }, 300);
         }
         
