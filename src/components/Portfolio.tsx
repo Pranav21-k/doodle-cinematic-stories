@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Video, LockIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ type Project = {
 };
 
 const Portfolio = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('uploads');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const carouselRef = useRef<any>(null);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
@@ -54,49 +55,8 @@ const Portfolio = () => {
   // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
-  // Updated sample portfolio projects with new categories
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: 1,
-      title: "Summer Collection",
-      client: "Elite Models",
-      category: "fashion",
-      thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    },
-    {
-      id: 2,
-      title: "Workout Series",
-      client: "Fitness First",
-      category: "fitness",
-      thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    },
-    {
-      id: 3,
-      title: "Fashion Week Highlights",
-      client: "Milan Fashion",
-      category: "fashion",
-      thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    },
-    {
-      id: 4,
-      title: "Club Opening",
-      client: "Midnight Lounge",
-      category: "events",
-      thumbnail: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    },
-    {
-      id: 5,
-      title: "Brand Partnership",
-      client: "SportWear Co",
-      category: "brand",
-      thumbnail: "https://images.unsplash.com/photo-1500673922987-e212871fec22",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    }
-  ]);
+  // Updated to only include user uploads - no default videos
+  const [projects, setProjects] = useState<Project[]>([]);
 
   // Handler for new video uploads
   const handleVideoUploaded = (file: File, previewUrl: string) => {
@@ -165,92 +125,42 @@ const Portfolio = () => {
       <div className="container mx-auto px-6 md:px-12">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="section-title animate-fade-in">Our Portfolio</h2>
+          <h2 className="section-title animate-fade-in">Your Videos</h2>
           <p className="section-subtitle max-w-2xl mx-auto">
-            Showcasing our best work and creative capabilities across industries.
+            Upload and showcase your videos. You can upload new videos using the button below.
           </p>
           
-          {/* Upload Video Button - Only visible for admins or shows login prompt */}
+          {/* Upload Video Button - Available to all users */}
           <div className="mt-6">
-            {isAdmin ? (
-              <div className="flex items-center justify-center gap-4">
-                <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
-                      <Video className="mr-2 h-4 w-4" />
-                      Upload Video (Admin)
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Upload Video</DialogTitle>
-                      <DialogDescription>
-                        Upload your video to add it to your portfolio
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <VideoUploader 
-                        onVideoUploaded={handleVideoUploaded} 
-                        buttonText="Select Video File"
-                        showPreview={true}
-                        adminOnly={true}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleAdminLogout}
-                >
-                  Logout Admin
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-doodle-purple hover:bg-doodle-purple/90">
+                  <Video className="mr-2 h-4 w-4" />
+                  Upload Video
                 </Button>
-              </div>
-            ) : (
-              <AlertDialog open={isAdminLoginOpen} onOpenChange={setIsAdminLoginOpen}>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsAdminLoginOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <LockIcon size={16} />
-                  Admin Access
-                </Button>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Admin Login</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Enter the admin password to access video upload functionality.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label htmlFor="password" className="text-right">
-                        Password
-                      </label>
-                      <input
-                        id="password"
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        className="col-span-3 rounded-md border border-input px-4 py-2"
-                      />
-                    </div>
-                  </div>
-                  
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setAdminPassword("")}>Cancel</AlertDialogCancel>
-                    <Button onClick={handleAdminLogin}>Login</Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload Video</DialogTitle>
+                  <DialogDescription>
+                    Upload your video to add it to your portfolio
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <VideoUploader 
+                    onVideoUploaded={handleVideoUploaded} 
+                    buttonText="Select Video File"
+                    showPreview={true}
+                    adminOnly={false} // Set to false so all users can upload
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
         {/* Immersive Video Carousel - Enhanced Style */}
-        {showcaseVideos.length > 0 && (
+        {showcaseVideos.length > 0 ? (
           <div className="mb-16 relative">
             {/* Autoplay Toggle */}
             <div className="flex justify-end mb-4">
@@ -341,98 +251,100 @@ const Portfolio = () => {
               </div>
             </div>
           </div>
+        ) : (
+          <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-xl mb-12">
+            <Video className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+            <h3 className="text-xl font-medium mb-2">No videos yet</h3>
+            <p className="text-gray-500 mb-6">Upload your first video to get started</p>
+            <Button 
+              onClick={() => setIsUploadDialogOpen(true)}
+              className="bg-doodle-purple hover:bg-doodle-purple/90"
+            >
+              Upload Now
+            </Button>
+          </div>
         )}
         
-        {/* Updated Filter Buttons with new categories */}
-        <div className="flex flex-wrap justify-center mb-12 gap-2">
-          {['all', 'fashion', 'fitness', 'events', 'brand', 'uploads'].map(category => {
-            // Don't show "uploads" category if there are no uploaded videos and user is not admin
-            if (category === 'uploads' && 
-                !projects.some(p => p.category === 'uploads') && 
-                !isAdmin) {
-              return null;
-            }
-            
-            const displayName = {
-              'all': 'All Work',
-              'fashion': 'Fashion & Modeling',
-              'fitness': 'Fitness & Training',
-              'events': 'Events & Nightlife',
-              'brand': 'Brand Collaborations',
-              'uploads': 'Your Uploads'
-            }[category];
-            
-            return (
-              <button
-                key={category}
-                onClick={() => setActiveFilter(category)}
-                className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                  activeFilter === category 
-                    ? 'bg-doodle-purple text-white' 
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-              >
-                {displayName}
-              </button>
-            );
-          })}
-        </div>
+        {/* Updated Filter Buttons - only show "uploads" category */}
+        {projects.length > 0 && (
+          <div className="flex flex-wrap justify-center mb-12 gap-2">
+            {['all', 'uploads'].map(category => {
+              const displayName = {
+                'all': 'All Videos',
+                'uploads': 'Your Uploads'
+              }[category];
+              
+              return (
+                <button
+                  key={category}
+                  onClick={() => setActiveFilter(category)}
+                  className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                    activeFilter === category 
+                      ? 'bg-doodle-purple text-white' 
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
+                >
+                  {displayName}
+                </button>
+              );
+            })}
+          </div>
+        )}
         
         {/* Portfolio Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProjects.map((project) => (
-            <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
-              {/* Project Thumbnail */}
-              <video
-                src={project.videoUrl}
-                className="w-full h-full object-cover"
-                muted
-                loop
-                onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
-                onMouseOut={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  video.pause();
-                  video.currentTime = 0;
-                }}
-              />
-              
-              {/* Overlay with information */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <h3 className="text-white text-xl font-bold">{project.title}</h3>
-                <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
+        {filteredProjects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProjects.map((project) => (
+              <Card key={project.id} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
+                {/* Project Thumbnail */}
+                <video
+                  src={project.videoUrl}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+                  onMouseOut={(e) => {
+                    const video = e.target as HTMLVideoElement;
+                    video.pause();
+                    video.currentTime = 0;
+                  }}
+                />
                 
-                {/* Play button */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                      <Play size={20} />
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>{project.title}</DialogTitle>
-                    </DialogHeader>
-                    <div className="aspect-video w-full">
-                      <video 
-                        src={project.videoUrl} 
-                        controls 
-                        className="w-full h-full object-contain"
-                        autoPlay
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </Card>
-          ))}
-        </div>
-        
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <button className="btn-outline">
-            View All Projects
-          </button>
-        </div>
+                {/* Overlay with information */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h3 className="text-white text-xl font-bold">{project.title}</h3>
+                  <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
+                  
+                  {/* Play button */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
+                        <Play size={20} />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                      <DialogHeader>
+                        <DialogTitle>{project.title}</DialogTitle>
+                      </DialogHeader>
+                      <div className="aspect-video w-full">
+                        <video 
+                          src={project.videoUrl} 
+                          controls 
+                          className="w-full h-full object-contain"
+                          autoPlay
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : projects.length > 0 ? (
+          <div className="text-center py-10">
+            <p>No videos match the selected filter.</p>
+          </div>
+        ) : null}
       </div>
       
       {/* Add custom styling for scrollbar hiding */}
