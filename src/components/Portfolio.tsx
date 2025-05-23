@@ -56,6 +56,7 @@ const Portfolio = () => {
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   
   // In a real application, this would be stored securely on the server
   // This is just for demonstration purposes
@@ -91,8 +92,8 @@ const Portfolio = () => {
     setIsUploadDialogOpen(false);
   };
 
-  // Get videos for the carousel
-  const showcaseVideos = projects;
+  // Get videos for the carousel, limited to previewLimit
+  const showcaseVideos = projects.slice(0, previewLimit);
 
   // Start or stop autoplay
   useEffect(() => {
@@ -177,8 +178,15 @@ const Portfolio = () => {
         {/* Immersive Video Carousel - Enhanced Style */}
         {showcaseVideos.length > 0 ? (
           <div className="mb-16 relative">
-            {/* Autoplay Toggle */}
-            <div className="flex justify-end mb-4">
+            {/* Preview Limit Controls */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">
+                  Showing {Math.min(showcaseVideos.length, previewLimit)} of {projects.length} videos
+                </span>
+              </div>
+              
+              {/* Autoplay Toggle */}
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -215,7 +223,7 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Horizontally Scrolling Video Thumbnails */}
+            {/* Horizontally Scrolling Video Thumbnails - Limited by previewLimit */}
             <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
               <div className="flex space-x-6 px-4">
                 {showcaseVideos.map((video, index) => (
