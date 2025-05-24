@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -50,11 +51,6 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-
-    /* Custom theme colors */
-    --doodle-purple: 147 51% 36%;
-    --doodle-pink: 330 81% 60%;
-    --doodle-blue: 217 91% 60%;
   }
 
   .dark {
@@ -96,11 +92,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105;
+    @apply bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105;
   }
   
   .btn-outline {
-    @apply border border-doodle-purple text-doodle-purple hover:bg-doodle-purple hover:text-white px-6 py-3 rounded-md transition-all duration-300 font-medium;
+    @apply border border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-md transition-all duration-300 font-medium;
   }
 
   .section-padding {
@@ -119,107 +115,10 @@
     @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
   }
 
-  .text-gradient {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent;
-  }
-
-  .text-gradient-enhanced {
-    background: linear-gradient(45deg, #8B5CF6, #EC4899, #EF4444);
-    background-size: 200% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: gradient-shift 3s ease infinite;
-  }
-
-  .video-bg-overlay {
-    @apply bg-gradient-to-t from-black/90 via-black/50 to-black/20 absolute inset-0;
-  }
-
-  .hero-text {
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 10px rgba(0, 0, 0, 0.6);
-  }
-
-  /* Enhanced video visibility */
-  .video-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-
-  .video-overlay {
-    background: linear-gradient(
-      135deg,
-      rgba(0, 0, 0, 0.1) 0%,
-      rgba(139, 92, 246, 0.1) 50%,
-      rgba(236, 72, 153, 0.1) 100%
-    );
-  }
-
-  .video-text-shadow {
-    text-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.9),
-      0 4px 8px rgba(0, 0, 0, 0.6),
-      0 8px 16px rgba(0, 0, 0, 0.3);
-  }
-
   /* Mobile-first responsive design */
   .mobile-safe-text {
     @apply text-white font-bold leading-tight;
-    text-shadow: 
-      0 1px 3px rgba(0, 0, 0, 1),
-      0 2px 6px rgba(0, 0, 0, 0.8),
-      0 4px 12px rgba(0, 0, 0, 0.6);
-  }
-
-  /* Video brightness enhancement for mobile */
-  .mobile-video {
-    filter: brightness(1.1) contrast(1.1) saturate(1.2);
-  }
-
-  @media (max-width: 768px) {
-    .mobile-video {
-      filter: brightness(1.2) contrast(1.2) saturate(1.3);
-    }
-  }
-}
-
-@layer utilities {
-  /* Improved mobile video visibility */
-  @media (max-width: 1024px) {
-    .video-container video {
-      filter: brightness(1.15) contrast(1.1) saturate(1.2);
-    }
-    
-    .video-overlay {
-      background: linear-gradient(
-        135deg,
-        rgba(0, 0, 0, 0.05) 0%,
-        rgba(139, 92, 246, 0.08) 50%,
-        rgba(236, 72, 153, 0.05) 100%
-      );
-    }
-  }
-
-  /* Enhanced scrollbar for mobile */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #8B5CF6, #EC4899);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #7C3AED, #DB2777);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   }
 
   /* Mobile touch improvements */
@@ -232,5 +131,27 @@
     input, textarea {
       font-size: 16px; /* Prevents zoom on iOS */
     }
+  }
+}
+
+@layer utilities {
+  /* Enhanced scrollbar for mobile */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #9333ea;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
   }
 }
