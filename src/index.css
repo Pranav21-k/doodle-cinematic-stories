@@ -92,11 +92,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105;
+    @apply bg-purple-600 hover:bg-purple-700 border-2 border-purple-400 text-white font-semibold py-3 px-8 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105;
   }
   
   .btn-outline {
-    @apply border border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-md transition-all duration-300 font-medium;
+    @apply border-2 border-purple-500 bg-white/10 backdrop-blur-sm text-white hover:bg-purple-600 hover:text-white hover:border-purple-400 px-6 py-3 rounded-full transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105;
   }
 
   .section-padding {
@@ -112,46 +112,78 @@
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
+    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:scale-105;
   }
 
-  /* Mobile-first responsive design */
+  /* Enhanced mobile text visibility */
   .mobile-safe-text {
     @apply text-white font-bold leading-tight;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Purple theme enhancements */
+  .purple-gradient-bg {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
+  }
+
+  .purple-glass {
+    @apply bg-white/10 backdrop-blur-sm border border-purple-300/30 shadow-lg;
   }
 
   /* Mobile touch improvements */
   @media (max-width: 768px) {
     button, .btn-primary, .btn-outline {
-      min-height: 44px;
+      min-height: 48px;
       touch-action: manipulation;
+      font-size: 16px;
     }
     
     input, textarea {
       font-size: 16px; /* Prevents zoom on iOS */
     }
+
+    .section-title {
+      @apply text-2xl sm:text-3xl md:text-4xl;
+    }
+    
+    .mobile-safe-text {
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+    }
   }
 }
 
 @layer utilities {
-  /* Enhanced scrollbar for mobile */
+  /* Enhanced scrollbar with purple theme */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+    background: rgba(124, 58, 237, 0.1);
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #9333ea;
-    border-radius: 3px;
+    background: linear-gradient(45deg, #7c3aed, #a855f7);
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #7c3aed;
+    background: linear-gradient(45deg, #6d28d9, #9333ea);
+  }
+
+  /* Enhanced drop shadows for better text visibility */
+  .drop-shadow-strong {
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+  }
+
+  /* Purple glow effects */
+  .purple-glow {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+  }
+
+  .purple-glow-hover:hover {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.7);
   }
 }
