@@ -22,7 +22,7 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-purple-900 via-purple-700 to-purple-500">
-      {/* Attractive Background with Purple Overlay */}
+      {/* Background Image without color overlays */}
       <div 
         ref={heroRef}
         className="absolute inset-0 w-full h-[120%] transition-transform duration-1000 ease-out"
@@ -34,12 +34,6 @@ const Hero = () => {
             backgroundPosition: "center",
           }}
         />
-        
-        {/* Purple gradient overlay for attractive look */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 via-purple-800/70 to-purple-600/80"></div>
-        
-        {/* Additional purple accent overlay */}
-        <div className="absolute inset-0 bg-purple-500/20"></div>
       </div>
 
       {/* Hero Content */}
