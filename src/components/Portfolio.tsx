@@ -103,7 +103,9 @@ const Portfolio = () => {
       }
     };
     
-    loadVideos();
+    // Add a small delay to ensure localStorage is ready
+    const timer = setTimeout(loadVideos, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Save videos to local storage whenever projects change
@@ -266,6 +268,7 @@ const Portfolio = () => {
   // Check if a video URL is valid
   const checkVideoURL = (url: string) => {
     try {
+      // Test if URL is valid (starts with http or /)
       return url && (url.startsWith('http') || url.startsWith('/'));
     } catch (e) {
       return false;
@@ -274,9 +277,9 @@ const Portfolio = () => {
 
   return (
     <section id="portfolio" className="section-padding bg-white">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
+      <div className="container mx-auto px-6 md:px-12">
         {/* Section Header */}
-        <div className="text-center mb-12 animate-fade-in-up">
+        <div className="text-center mb-16 animate-fade-in-up">
           <h2 className="section-title animate-fade-in-up">Our Videos</h2>
           <p className="section-subtitle max-w-2xl mx-auto animate-fade-in-up">
             Watch and explore videos in our portfolio.
@@ -284,7 +287,7 @@ const Portfolio = () => {
           
           {/* Manage Featured Videos Button */}
           {projects.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8">
               <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="animate-pulse-glow">
@@ -343,7 +346,7 @@ const Portfolio = () => {
         
         {/* Loading state for initial load */}
         {isInitialLoad && (
-          <div className="text-center py-20 border-2 border-dashed border-gray-300 rounded-2xl mb-12 animate-fade-in-up bg-gradient-to-br from-gray-50 to-white">
+          <div className="text-center py-24 border-2 border-dashed border-gray-300 rounded-2xl mb-12 animate-fade-in-up bg-gradient-to-br from-gray-50 to-white">
             <Video className="w-16 h-16 mx-auto text-gray-300 mb-6 animate-spin" />
             <h3 className="text-2xl font-medium mb-4 text-gray-600">Loading Videos...</h3>
             <p className="text-gray-500 text-lg">
@@ -368,36 +371,36 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Video Carousel - Fixed alignment and spacing */}
+        {/* Video Carousel - Fixed alignment and overlay issues */}
         {showcaseVideos.length > 0 && videosLoaded && !loadingError ? (
-          <div className="mb-16 animate-fade-in-up">
-            {/* Controls */}
-            <div className="flex justify-between items-center mb-6">
+          <div className="mb-16 relative animate-fade-in-up">
+            {/* Controls - Fixed positioning */}
+            <div className="flex justify-between items-center mb-6 relative z-10">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500 animate-fade-in-up">
                   Showing {Math.min(showcaseVideos.length, previewLimit)} of {projects.length} videos
                 </span>
               </div>
               
-              {/* Autoplay Toggle */}
+              {/* Autoplay Toggle - Fixed z-index */}
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsAutoplay(!isAutoplay)}
-                className="bg-white/90 backdrop-blur-sm border-purple-300/30 hover:bg-purple-600 hover:text-white transition-all duration-300"
+                className="relative z-20 bg-white/90 backdrop-blur-sm border-purple-300/30 hover:bg-purple-600 hover:text-white transition-all duration-300"
               >
                 <Video size={16} />
                 <span className="ml-2">{isAutoplay ? 'Stop Rotation' : 'Start Rotation'}</span>
               </Button>
             </div>
             
-            {/* Main Feature Video - Fixed aspect ratio and positioning */}
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8 shadow-2xl group bg-black">
+            {/* Main Feature Video - Fixed positioning */}
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8 shadow-2xl group">
               {showcaseVideos[activeVideoIndex] && showcaseVideos[activeVideoIndex].videoUrl && (
                 <video
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex].videoUrl}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all duration-700"
                   autoPlay
                   muted
                   loop
@@ -410,67 +413,69 @@ const Portfolio = () => {
               )}
               
               {/* Overlay - Fixed positioning */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none">
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                  <div className="backdrop-blur-sm bg-black/30 rounded-xl p-4 md:p-6">
-                    <h3 className="text-white text-xl md:text-3xl font-bold mb-2">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="backdrop-blur-sm bg-black/30 rounded-xl p-6">
+                    <h3 className="text-white text-3xl font-bold mb-2">
                       {showcaseVideos[activeVideoIndex]?.title}
                     </h3>
-                    <p className="text-purple-200 text-sm md:text-lg">
+                    <p className="text-purple-200 text-lg">
                       {showcaseVideos[activeVideoIndex]?.client}
                     </p>
                   </div>
                 </div>
               </div>
               
-              {/* Play indicator */}
+              {/* Play indicator - Fixed positioning */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <Play size={24} className="text-white ml-1" />
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Play size={32} className="text-white ml-1" />
                 </div>
               </div>
             </div>
             
-            {/* Thumbnail Navigation - Fixed scrolling and proper spacing */}
+            {/* Thumbnail Navigation - Fixed scrolling and alignment */}
             <div className="relative">
-              <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide">
-                {showcaseVideos.map((video, index) => (
-                  <div 
-                    key={`thumb-${video.id}-${index}`}
-                    className={`flex-shrink-0 w-40 md:w-48 h-24 md:h-32 rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all duration-500 relative
-                      ${index === activeVideoIndex 
-                        ? 'ring-4 ring-purple-500 scale-105 shadow-purple-500/50' 
-                        : 'opacity-80 hover:opacity-100 hover:scale-102'
-                      }
-                    `}
-                    onClick={() => setActiveVideoIndex(index)}
-                  >
-                    <video 
-                      src={video.videoUrl} 
-                      className="w-full h-full object-cover"
-                      muted
-                      preload="metadata"
-                      onError={(e) => {
-                        console.error(`Error loading thumbnail video ${video.id}:`, e);
-                      }}
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3">
-                        <p className="text-white text-xs md:text-sm font-medium truncate">
-                          {video.title}
-                        </p>
+              <div className="overflow-x-auto pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div className="flex space-x-6 px-2 min-w-max">
+                  {showcaseVideos.map((video, index) => (
+                    <div 
+                      key={`thumb-${video.id}-${index}`}
+                      className={`flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all duration-500 relative
+                        ${index === activeVideoIndex 
+                          ? 'ring-4 ring-purple-500 scale-105 shadow-purple-500/50' 
+                          : 'opacity-80 hover:opacity-100 hover:scale-102'
+                        }
+                      `}
+                      onClick={() => setActiveVideoIndex(index)}
+                    >
+                      <video 
+                        src={video.videoUrl} 
+                        className="w-full h-full object-cover"
+                        muted
+                        preload="metadata"
+                        onError={(e) => {
+                          console.error(`Error loading thumbnail video ${video.id}:`, e);
+                        }}
+                      />
+                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white text-sm font-medium truncate">
+                            {video.title}
+                          </p>
+                        </div>
                       </div>
+                      
+                      {/* Active indicator */}
+                      {index === activeVideoIndex && (
+                        <div className="absolute top-2 right-2">
+                          <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Active indicator */}
-                    {index === activeVideoIndex && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -480,12 +485,12 @@ const Portfolio = () => {
         {projects.length > 0 && videosLoaded && !loadingError && (
           <div className="mb-12">
             <Tabs defaultValue="all" onValueChange={setActiveFilter}>
-              <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent gap-2">
+              <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent">
                 {categories.map((cat) => (
                   <TabsTrigger 
                     key={cat.id} 
                     value={cat.id}
-                    className="px-4 md:px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white text-sm md:text-base"
+                    className="px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
                   >
                     {cat.name}
                   </TabsTrigger>
@@ -494,7 +499,7 @@ const Portfolio = () => {
               
               {categories.map((cat) => (
                 <TabsContent key={cat.id} value={cat.id} className="mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
                         <video
@@ -519,7 +524,7 @@ const Portfolio = () => {
                         
                         {/* Overlay with information */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <h3 className="text-white text-xl md:text-3xl font-bold">{project.title}</h3>
+                          <h3 className="text-white text-xl font-bold">{project.title}</h3>
                           <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
                           
                           <div className="flex gap-2">
@@ -607,14 +612,10 @@ const Portfolio = () => {
         )}
       </div>
       
-      {/* Custom styles for proper scrolling and responsive behavior */}
+      {/* Custom styles for proper scrolling */}
       <style>
         {`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
+        .overflow-x-auto::-webkit-scrollbar {
           display: none;
         }
         .hover\\:scale-102:hover {
