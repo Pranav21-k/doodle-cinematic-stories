@@ -63,7 +63,7 @@ const Hero = () => {
             >
               <span className="flex items-center gap-3">
                 <Play size={20} />
-                Our Videos 
+                See Our Work 
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Button>
