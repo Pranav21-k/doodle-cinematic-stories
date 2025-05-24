@@ -54,7 +54,7 @@ const ContactSection = () => {
         <div className="text-center mb-16">
           <h2 className="section-title animate-fade-in">Get in Touch</h2>
           <p className="section-subtitle max-w-2xl mx-auto">
-            Ready to turn your vision into reality? Contact us today to start the
+            Ready to turn your vision into reality? Contact Pranav today to start the
             conversation.
           </p>
         </div>
@@ -66,6 +66,17 @@ const ContactSection = () => {
               <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
               
               <div className="space-y-6">
+                {/* Name */}
+                <div className="flex items-start">
+                  <div className="bg-doodle-purple/10 p-3 rounded-full mr-4">
+                    <Phone size={20} className="text-doodle-purple" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Director & Producer</h4>
+                    <p className="text-gray-800 font-semibold">Pranav Kottappurath</p>
+                  </div>
+                </div>
+
                 {/* Phone */}
                 <div className="flex items-start">
                   <div className="bg-doodle-purple/10 p-3 rounded-full mr-4">
@@ -75,9 +86,9 @@ const ContactSection = () => {
                     <h4 className="font-medium">Phone</h4>
                     <a 
                       href="tel:+12012841297" 
-                      className="text-gray-600 hover:text-doodle-purple transition-colors duration-300 cursor-pointer"
+                      className="text-purple-600 hover:text-purple-800 transition-colors duration-200 font-medium"
                     >
-                      +1 (201) 284-1297
+                      +1 201-284-1297
                     </a>
                   </div>
                 </div>
@@ -90,18 +101,18 @@ const ContactSection = () => {
                   <div>
                     <h4 className="font-medium">Email</h4>
                     <a 
-                      href="mailto:pranav.kt@gmail.com" 
-                      className="text-gray-600 hover:text-doodle-purple transition-colors duration-300 cursor-pointer"
+                      href="mailto:pranav21.kt@gmail.com" 
+                      className="text-purple-600 hover:text-purple-800 transition-colors duration-200 font-medium"
                     >
-                      pranav.kt@gmail.com
+                      pranav21.kt@gmail.com
                     </a>
                   </div>
                 </div>
 
                 {/* WhatsApp */}
                 <div className="flex items-start">
-                  <div className="bg-green-500/10 p-3 rounded-full mr-4">
-                    <MessageCircle size={20} className="text-green-500" />
+                  <div className="bg-green-100 p-3 rounded-full mr-4">
+                    <MessageCircle size={20} className="text-green-600" />
                   </div>
                   <div>
                     <h4 className="font-medium">WhatsApp</h4>
@@ -109,9 +120,10 @@ const ContactSection = () => {
                       href="https://wa.me/12012841297" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-green-500 transition-colors duration-300 cursor-pointer"
+                      className="text-green-600 hover:text-green-800 transition-colors duration-200 font-medium flex items-center gap-2"
                     >
-                      +1 (201) 284-1297
+                      Message on WhatsApp
+                      <MessageCircle size={16} />
                     </a>
                   </div>
                 </div>
@@ -125,7 +137,8 @@ const ContactSection = () => {
                     <h4 className="font-medium">Studio Location</h4>
                     <p className="text-gray-600">
                       430 Central Ave<br />
-                      Jersey City, NJ 07307
+                      Jersey City, New Jersey<br />
+                      07307
                     </p>
                   </div>
                 </div>
@@ -134,7 +147,7 @@ const ContactSection = () => {
               {/* Google Maps Embed */}
               <div className="mt-8 h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.175807!2d-74.0463589!3d40.7286796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c250d32e2977a9%3A0x1234567890abcdef!2s430%20Central%20Ave%2C%20Jersey%20City%2C%20NJ%2007307%2C%20USA!5e0!3m2!1sen!2sus!4v1652389888851!5m2!1sen!2sus"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.686421!2d-74.0539739!3d40.7262779!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25771b3b6bdc5%3A0x623e8bd1d80b1e8!2s430%20Central%20Ave%2C%20Jersey%20City%2C%20NJ%2007307%2C%20USA!5e0!3m2!1sen!2sus!4v1652389888851!5m2!1sen!2sus"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -143,14 +156,6 @@ const ContactSection = () => {
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Doodle Production Studio Location - Jersey City, NJ"
                 ></iframe>
-              </div>
-
-              {/* Contact Person */}
-              <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                <div className="text-center">
-                  <h4 className="font-bold text-gray-900 mb-1">Pranav Kottappurath</h4>
-                  <p className="text-sm text-purple-600 font-medium">Creative Director & Founder</p>
-                </div>
               </div>
             </div>
           </div>
