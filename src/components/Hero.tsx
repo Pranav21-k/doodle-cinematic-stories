@@ -45,15 +45,9 @@ const Hero = () => {
       {/* Hero Content */}
       <div className="container mx-auto px-6 md:px-12 h-full flex flex-col justify-center relative z-10">
         <div className="max-w-4xl animate-fade-in">
-          <div className="mb-6 inline-block">
-            <span className="px-6 py-3 bg-purple-500 border-2 border-purple-300 rounded-full text-white text-sm font-semibold shadow-lg">
-              ✨ Cinematic Excellence
-            </span>
-          </div>
-          
           <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight">
             <span className="block text-white drop-shadow-lg">Your Story,</span>
-            <span className="block text-purple-200 drop-shadow-lg">
+            <span className="block bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">
               Cinematically Told
             </span>
           </h1>
@@ -65,11 +59,11 @@ const Hero = () => {
           
           <div className="flex flex-col sm:flex-row gap-6 mb-16">
             <Button 
-              className="group bg-purple-600 hover:bg-purple-700 border-2 border-purple-400 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+              className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-0"
               onClick={() => {
-                const portfolioSection = document.getElementById('portfolio');
-                if (portfolioSection) {
-                  portfolioSection.scrollIntoView({ behavior: 'smooth' });
+                const aboutSection = document.getElementById('about');
+                if (aboutSection) {
+                  aboutSection.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
             >
@@ -81,8 +75,10 @@ const Hero = () => {
             </Button>
             
             <Button 
-              variant="outline" 
-              className="group bg-white/10 backdrop-blur-sm border-2 border-white/50 text-white hover:bg-white hover:text-purple-700 px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-0"
+              onClick={() => {
+                window.open('tel:+12012841297', '_self');
+              }}
             >
               <span className="flex items-center gap-2">
                 Book a Free Call
