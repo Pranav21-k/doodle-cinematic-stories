@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -53,18 +54,11 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
-  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
-  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const [previewLimit, setPreviewLimit] = useState(4);
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  
-  // In a real application, this would be stored securely on the server
-  // This is just for demonstration purposes
-  const ADMIN_PASSWORD = "admin123"; 
   
   // Updated categories based on user's request
   const categories = [
@@ -75,11 +69,7 @@ const Portfolio = () => {
     { id: 'brand', name: 'Brand Collaborations' }
   ];
   
-  // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
-
-  // Detect if we're in development mode
-  const isDevelopment = import.meta.env.MODE === 'development';
 
   // Load videos from local storage on component mount
   useEffect(() => {
@@ -91,31 +81,11 @@ const Portfolio = () => {
         if (savedVideos) {
           try {
             const parsedVideos = JSON.parse(savedVideos);
-            
-            // Check if first video is accessible
-            const firstVideo = parsedVideos[0];
-            if (firstVideo && firstVideo.videoUrl) {
-              const videoEl = document.createElement('video');
-              
-              videoEl.onloadedmetadata = () => {
-                console.log(`Video successfully loaded: ${firstVideo.videoUrl}`);
-                setProjects(parsedVideos);
-                setVideosLoaded(true);
-                console.log(`${parsedVideos.length} videos loaded from storage`);
-              };
-              
-              videoEl.onerror = (e) => {
-                console.error('Error loading video:', e);
-                setLoadingError(`Unable to load video at ${firstVideo.videoUrl}. Check if video files exist in the public folder.`);
-              };
-              
-              videoEl.src = firstVideo.videoUrl;
-            } else {
-              setLoadingError('No valid videos found in storage');
-            }
+            console.log('Loading videos from localStorage:', parsedVideos.length);
+            setProjects(parsedVideos);
+            setVideosLoaded(true);
           } catch (error) {
             console.error('Failed to parse saved videos', error);
-            toast.error('Failed to load saved videos');
             setLoadingError('Failed to parse saved videos');
           }
         } else {
@@ -141,20 +111,16 @@ const Portfolio = () => {
   // Toggle a video's featured status
   const toggleFeaturedVideo = (id: number) => {
     setProjects(prev => {
-      // Count how many videos are currently featured
       const featuredCount = prev.filter(p => p.featured).length;
       
       const updated = prev.map(project => {
         if (project.id === id) {
-          // If it's already featured, we can always unfeature it
           if (project.featured) {
             return { ...project, featured: false };
           } 
-          // If it's not featured and we have less than the limit, we can feature it
           else if (featuredCount < previewLimit) {
             return { ...project, featured: true };
           } 
-          // Otherwise, show a toast that we've reached the limit
           else {
             toast.error(`You can only feature ${previewLimit} videos. Unfeature one first.`);
             return project;
@@ -163,7 +129,6 @@ const Portfolio = () => {
         return project;
       });
       
-      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
@@ -176,7 +141,6 @@ const Portfolio = () => {
     if (featured.length >= previewLimit) {
       return featured.slice(0, previewLimit);
     } else {
-      // If we don't have enough featured videos, add some non-featured ones
       const nonFeatured = projects.filter(p => !p.featured);
       return [...featured, ...nonFeatured].slice(0, previewLimit);
     }
@@ -190,7 +154,7 @@ const Portfolio = () => {
           const nextIndex = (prevIndex + 1) % showcaseVideos.length;
           return nextIndex;
         });
-      }, 8000); // Change video every 8 seconds
+      }, 8000);
       
       setAutoplayInterval(interval);
       return () => clearInterval(interval);
@@ -200,115 +164,22 @@ const Portfolio = () => {
     }
   }, [isAutoplay, showcaseVideos.length]);
 
-  // Handle admin login attempt
-  const handleAdminLogin = () => {
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      setIsAdminLoginOpen(false);
-      toast.success("Admin access granted!");
-    } else {
-      toast.error("Incorrect password");
-    }
-  };
-
-  // Handle admin logout
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
-    setAdminPassword("");
-    toast.info("Logged out of admin mode");
-  };
-
   // Handle category update
   const handleCategoryUpdate = (id: number, category: string) => {
     setProjects(prev => {
       const updated = prev.map(project => 
         project.id === id ? { ...project, category } : project
       );
-      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       toast.success("Category updated");
       return updated;
     });
   };
 
-  // Export all videos to a downloadable JSON file
-  const exportVideos = () => {
-    if (projects.length === 0) {
-      toast.error("No videos to export");
-      return;
-    }
-    
-    try {
-      const dataStr = JSON.stringify(projects, null, 2);
-      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-      
-      const exportFileDefaultName = `portfolio_videos_${new Date().toISOString().split('T')[0]}.json`;
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
-      
-      toast.success(`${projects.length} videos exported successfully`);
-    } catch (error) {
-      console.error('Failed to export videos', error);
-      toast.error("Failed to export videos");
-    }
-  };
-
-  // Import videos from a JSON file
-  const importVideos = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const importedProjects = JSON.parse(event.target?.result as string);
-        
-        if (!Array.isArray(importedProjects)) {
-          throw new Error("Invalid format: Expected an array");
-        }
-        
-        // Basic validation to ensure we have the right format
-        if (importedProjects.some(p => !p.title || !p.videoUrl)) {
-          throw new Error("Invalid format: Missing required fields");
-        }
-        
-        // Merge with existing videos, avoiding duplicates by ID
-        const existingIds = projects.map(p => p.id);
-        const newProjects = importedProjects.filter(p => !existingIds.includes(p.id));
-        const mergedProjects = [...projects, ...newProjects];
-        
-        setProjects(mergedProjects);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedProjects));
-        toast.success(`${newProjects.length} videos imported successfully`);
-      } catch (error) {
-        console.error('Failed to import videos', error);
-        toast.error("Failed to import videos: Invalid format");
-      }
-      
-      // Reset the input
-      e.target.value = '';
-    };
-    
-    reader.readAsText(file);
-  };
-
   // Filter projects based on active filter
   const filteredProjects = activeFilter === 'all'
     ? projects
     : projects.filter(project => project.category === activeFilter);
-
-  // Check if a video URL is valid
-  const checkVideoURL = (url: string) => {
-    try {
-      // Test if URL is valid (starts with http or /)
-      return url && (url.startsWith('http') || url.startsWith('/'));
-    } catch (e) {
-      return false;
-    }
-  };
 
   return (
     <section id="portfolio" className="section-padding bg-white">
@@ -394,10 +265,10 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Immersive Video Carousel - Enhanced Style */}
+        {/* Immersive Video Carousel */}
         {showcaseVideos.length > 0 && !loadingError ? (
           <div className="mb-16 relative animate-fade-in-up">
-            {/* Preview Limit Controls */}
+            {/* Preview Controls */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500 animate-fade-in-up">
@@ -430,19 +301,11 @@ const Portfolio = () => {
                   playsInline
                   preload="auto"
                   onError={(e) => {
-                    console.error('Error loading feature video:', e);
-                    (e.target as HTMLVideoElement).style.display = 'none';
-                    const parent = (e.target as HTMLVideoElement).parentElement;
-                    if (parent) {
-                      const fallback = document.createElement('div');
-                      fallback.className = 'w-full h-full bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center';
-                      fallback.innerHTML = '<p class="text-white text-xl">Video unavailable</p>';
-                      parent.appendChild(fallback);
-                    }
+                    console.error('Error loading feature video:', showcaseVideos[activeVideoIndex].videoUrl);
                   }}
                 />
               )}
-              {/* Enhanced overlay with better gradient */}
+              {/* Enhanced overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end">
                 <div className="p-8 w-full">
                   <div className="backdrop-blur-sm bg-black/30 rounded-xl p-6 transform transition-all duration-500 group-hover:translate-y-0 translate-y-2">
@@ -464,7 +327,7 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Horizontally Scrolling Video Thumbnails - Enhanced */}
+            {/* Video Thumbnails */}
             <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
               <div className="flex space-x-8 px-4">
                 {showcaseVideos.map((video, index) => (
@@ -476,17 +339,8 @@ const Portfolio = () => {
                         ? 'ring-4 ring-purple-500 scale-110 z-10 shadow-purple-500/50' 
                         : 'opacity-80 hover:opacity-100 hover:scale-105'
                       }
-                      ${index % 2 === 0 ? 'rotate-1' : '-rotate-1'}
-                      ${index === activeVideoIndex - 1 || index === activeVideoIndex + 1 
-                        ? 'translate-y-2' 
-                        : index === activeVideoIndex - 2 || index === activeVideoIndex + 2
-                          ? 'translate-y-4' 
-                          : 'translate-y-0'
-                      }
                     `}
-                    onClick={() => {
-                      setActiveVideoIndex(index);
-                    }}
+                    onClick={() => setActiveVideoIndex(index)}
                   >
                     <video 
                       src={video.videoUrl} 
@@ -495,26 +349,8 @@ const Portfolio = () => {
                       loop
                       playsInline
                       preload="auto"
-                      autoPlay={index === activeVideoIndex}
-                      onLoadedMetadata={(e) => {
-                        if (index !== activeVideoIndex) {
-                          (e.target as HTMLVideoElement).pause();
-                        } else {
-                          (e.target as HTMLVideoElement).play();
-                        }
-                      }}
                       onError={(e) => {
-                        console.error(`Error loading thumbnail video ${video.id}:`, e);
-                        const videoEl = e.target as HTMLVideoElement;
-                        videoEl.style.display = 'none';
-                        
-                        const fallback = document.createElement('div');
-                        fallback.className = 'w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center';
-                        fallback.innerHTML = '<p class="text-white text-xs">Video error</p>';
-                        
-                        if (videoEl.parentElement) {
-                          videoEl.parentElement.appendChild(fallback);
-                        }
+                        console.error(`Error loading thumbnail video ${video.id}:`, video.videoUrl);
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end">
@@ -525,7 +361,6 @@ const Portfolio = () => {
                       </div>
                     </div>
                     
-                    {/* Active indicator */}
                     {index === activeVideoIndex && (
                       <div className="absolute top-2 right-2">
                         <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
@@ -543,13 +378,10 @@ const Portfolio = () => {
             <p className="text-gray-500 text-lg">
               Loading videos from your public folder...
             </p>
-            <div className="mt-6">
-              <div className="animate-shimmer w-64 h-2 bg-gray-200 rounded mx-auto"></div>
-            </div>
           </div>
         ) : null}
         
-        {/* Updated Category Tabs */}
+        {/* Category Tabs */}
         {projects.length > 0 && !loadingError && (
           <div className="mb-12">
             <Tabs defaultValue="all" onValueChange={setActiveFilter}>
@@ -570,7 +402,6 @@ const Portfolio = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
-                        {/* Project Thumbnail */}
                         <video
                           src={project.videoUrl}
                           className="grid-video w-full h-full object-cover"
@@ -584,15 +415,16 @@ const Portfolio = () => {
                             video.pause();
                             video.currentTime = 0;
                           }}
+                          onError={(e) => {
+                            console.error(`Error loading grid video ${project.id}:`, project.videoUrl);
+                          }}
                         />
                         
-                        {/* Overlay with information */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <h3 className="text-white text-xl font-bold">{project.title}</h3>
                           <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
                           
                           <div className="flex gap-2">
-                            {/* Play button */}
                             <Dialog>
                               <DialogTrigger asChild>
                                 <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
@@ -616,7 +448,6 @@ const Portfolio = () => {
                               </DialogContent>
                             </Dialog>
                             
-                            {/* Featured toggle button */}
                             <button 
                               className={`px-3 py-1.5 ${project.featured ? 'bg-doodle-purple text-white' : 'bg-white/20 text-white'} text-sm rounded-full hover:bg-doodle-purple/70 hover:text-white`}
                               onClick={() => toggleFeaturedVideo(project.id)}
@@ -624,7 +455,6 @@ const Portfolio = () => {
                               {project.featured ? 'Featured' : 'Feature Video'}
                             </button>
                             
-                            {/* Category selector */}
                             <Dialog>
                               <DialogTrigger asChild>
                                 <button className="px-3 py-1.5 bg-white/20 text-white text-sm rounded-full hover:bg-white/30">
@@ -636,7 +466,7 @@ const Portfolio = () => {
                                   <DialogTitle>Change Category</DialogTitle>
                                 </DialogHeader>
                                 <div className="grid grid-cols-1 gap-2 mt-4">
-                                  {categories.slice(1).map((cat) => ( // Skip "All Videos"
+                                  {categories.slice(1).map((cat) => (
                                     <Button 
                                       key={cat.id} 
                                       variant="outline" 
@@ -654,7 +484,6 @@ const Portfolio = () => {
                           </div>
                         </div>
                         
-                        {/* Featured badge */}
                         {project.featured && (
                           <div className="absolute top-2 right-2 bg-doodle-purple text-white text-xs px-2 py-1 rounded-full">
                             Featured
@@ -676,7 +505,6 @@ const Portfolio = () => {
         )}
       </div>
       
-      {/* Add custom styling for scrollbar hiding and video autoplay */}
       <style>
         {`
         .no-scrollbar::-webkit-scrollbar {
