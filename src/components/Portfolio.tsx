@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -54,17 +53,20 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
-  const [isAutoplay, setIsAutoplay] = useState(true);
+  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
-  const [previewLimit, setPreviewLimit] = useState(4);
+  const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   
+  // In a real application, this would be stored securely on the server
+  // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
+  // Updated categories based on user's request
   const categories = [
     { id: 'all', name: 'All Videos' },
     { id: 'fashion', name: 'Fashion & Modeling' },
@@ -73,34 +75,51 @@ const Portfolio = () => {
     { id: 'brand', name: 'Brand Collaborations' }
   ];
   
+  // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
+
+  // Detect if we're in development mode
+  const isDevelopment = import.meta.env.MODE === 'development';
 
   // Load videos from local storage on component mount
   useEffect(() => {
     const loadVideos = async () => {
       try {
         setLoadingError(null);
-        console.log('Loading videos from localStorage...');
-        
         const savedVideos = localStorage.getItem(STORAGE_KEY);
         
         if (savedVideos) {
           try {
             const parsedVideos = JSON.parse(savedVideos);
-            console.log(`Found ${parsedVideos.length} videos in localStorage`);
             
-            // Set videos immediately without validation
-            setProjects(parsedVideos);
-            setVideosLoaded(true);
-            console.log('Videos loaded successfully');
-            
+            // Check if first video is accessible
+            const firstVideo = parsedVideos[0];
+            if (firstVideo && firstVideo.videoUrl) {
+              const videoEl = document.createElement('video');
+              
+              videoEl.onloadedmetadata = () => {
+                console.log(`Video successfully loaded: ${firstVideo.videoUrl}`);
+                setProjects(parsedVideos);
+                setVideosLoaded(true);
+                console.log(`${parsedVideos.length} videos loaded from storage`);
+              };
+              
+              videoEl.onerror = (e) => {
+                console.error('Error loading video:', e);
+                setLoadingError(`Unable to load video at ${firstVideo.videoUrl}. Check if video files exist in the public folder.`);
+              };
+              
+              videoEl.src = firstVideo.videoUrl;
+            } else {
+              setLoadingError('No valid videos found in storage');
+            }
           } catch (error) {
             console.error('Failed to parse saved videos', error);
-            setLoadingError('Failed to parse saved videos from storage');
+            toast.error('Failed to load saved videos');
+            setLoadingError('Failed to parse saved videos');
           }
         } else {
-          console.log('No videos found in localStorage');
-          setLoadingError('No videos found. Please reload the page to initialize default videos.');
+          setLoadingError('No videos found in storage. Please reload the page.');
         }
       } catch (error) {
         console.error('Error loading videos:', error);
@@ -122,16 +141,20 @@ const Portfolio = () => {
   // Toggle a video's featured status
   const toggleFeaturedVideo = (id: number) => {
     setProjects(prev => {
+      // Count how many videos are currently featured
       const featuredCount = prev.filter(p => p.featured).length;
       
       const updated = prev.map(project => {
         if (project.id === id) {
+          // If it's already featured, we can always unfeature it
           if (project.featured) {
             return { ...project, featured: false };
           } 
+          // If it's not featured and we have less than the limit, we can feature it
           else if (featuredCount < previewLimit) {
             return { ...project, featured: true };
           } 
+          // Otherwise, show a toast that we've reached the limit
           else {
             toast.error(`You can only feature ${previewLimit} videos. Unfeature one first.`);
             return project;
@@ -140,6 +163,7 @@ const Portfolio = () => {
         return project;
       });
       
+      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
@@ -152,6 +176,7 @@ const Portfolio = () => {
     if (featured.length >= previewLimit) {
       return featured.slice(0, previewLimit);
     } else {
+      // If we don't have enough featured videos, add some non-featured ones
       const nonFeatured = projects.filter(p => !p.featured);
       return [...featured, ...nonFeatured].slice(0, previewLimit);
     }
@@ -165,7 +190,7 @@ const Portfolio = () => {
           const nextIndex = (prevIndex + 1) % showcaseVideos.length;
           return nextIndex;
         });
-      }, 8000);
+      }, 8000); // Change video every 8 seconds
       
       setAutoplayInterval(interval);
       return () => clearInterval(interval);
@@ -199,6 +224,7 @@ const Portfolio = () => {
       const updated = prev.map(project => 
         project.id === id ? { ...project, category } : project
       );
+      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       toast.success("Category updated");
       return updated;
@@ -244,10 +270,12 @@ const Portfolio = () => {
           throw new Error("Invalid format: Expected an array");
         }
         
+        // Basic validation to ensure we have the right format
         if (importedProjects.some(p => !p.title || !p.videoUrl)) {
           throw new Error("Invalid format: Missing required fields");
         }
         
+        // Merge with existing videos, avoiding duplicates by ID
         const existingIds = projects.map(p => p.id);
         const newProjects = importedProjects.filter(p => !existingIds.includes(p.id));
         const mergedProjects = [...projects, ...newProjects];
@@ -260,6 +288,7 @@ const Portfolio = () => {
         toast.error("Failed to import videos: Invalid format");
       }
       
+      // Reset the input
       e.target.value = '';
     };
     
@@ -271,10 +300,14 @@ const Portfolio = () => {
     ? projects
     : projects.filter(project => project.category === activeFilter);
 
-  // Video error handler
-  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    console.log('Video error occurred, but continuing...');
-    // Don't show error to user, just log it
+  // Check if a video URL is valid
+  const checkVideoURL = (url: string) => {
+    try {
+      // Test if URL is valid (starts with http or /)
+      return url && (url.startsWith('http') || url.startsWith('/'));
+    } catch (e) {
+      return false;
+    }
   };
 
   return (
@@ -313,7 +346,6 @@ const Portfolio = () => {
                               src={project.videoUrl}
                               className="w-full h-full object-cover"
                               muted
-                              onError={handleVideoError}
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
@@ -362,7 +394,7 @@ const Portfolio = () => {
           </div>
         )}
         
-        {/* Immersive Video Carousel */}
+        {/* Immersive Video Carousel - Enhanced Style */}
         {showcaseVideos.length > 0 && !loadingError ? (
           <div className="mb-16 relative animate-fade-in-up">
             {/* Preview Limit Controls */}
@@ -397,7 +429,17 @@ const Portfolio = () => {
                   loop
                   playsInline
                   preload="auto"
-                  onError={handleVideoError}
+                  onError={(e) => {
+                    console.error('Error loading feature video:', e);
+                    (e.target as HTMLVideoElement).style.display = 'none';
+                    const parent = (e.target as HTMLVideoElement).parentElement;
+                    if (parent) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-full h-full bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center';
+                      fallback.innerHTML = '<p class="text-white text-xl">Video unavailable</p>';
+                      parent.appendChild(fallback);
+                    }
+                  }}
                 />
               )}
               {/* Enhanced overlay with better gradient */}
@@ -422,7 +464,7 @@ const Portfolio = () => {
               </div>
             </div>
             
-            {/* Horizontally Scrolling Video Thumbnails */}
+            {/* Horizontally Scrolling Video Thumbnails - Enhanced */}
             <div className="relative -mt-4 z-10 overflow-x-auto pb-8 no-scrollbar">
               <div className="flex space-x-8 px-4">
                 {showcaseVideos.map((video, index) => (
@@ -461,7 +503,19 @@ const Portfolio = () => {
                           (e.target as HTMLVideoElement).play();
                         }
                       }}
-                      onError={handleVideoError}
+                      onError={(e) => {
+                        console.error(`Error loading thumbnail video ${video.id}:`, e);
+                        const videoEl = e.target as HTMLVideoElement;
+                        videoEl.style.display = 'none';
+                        
+                        const fallback = document.createElement('div');
+                        fallback.className = 'w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center';
+                        fallback.innerHTML = '<p class="text-white text-xs">Video error</p>';
+                        
+                        if (videoEl.parentElement) {
+                          videoEl.parentElement.appendChild(fallback);
+                        }
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end">
                       <div className="p-4 w-full">
@@ -487,7 +541,7 @@ const Portfolio = () => {
             <Video className="w-16 h-16 mx-auto text-gray-300 mb-6 animate-float" />
             <h3 className="text-2xl font-medium mb-4 text-gray-600">No videos available</h3>
             <p className="text-gray-500 text-lg">
-              Loading videos from your portfolio...
+              Loading videos from your public folder...
             </p>
             <div className="mt-6">
               <div className="animate-shimmer w-64 h-2 bg-gray-200 rounded mx-auto"></div>
@@ -504,7 +558,7 @@ const Portfolio = () => {
                   <TabsTrigger 
                     key={cat.id} 
                     value={cat.id}
-                    className="px-6 py-2 rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                    className="px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
                   >
                     {cat.name}
                   </TabsTrigger>
@@ -530,7 +584,6 @@ const Portfolio = () => {
                             video.pause();
                             video.currentTime = 0;
                           }}
-                          onError={handleVideoError}
                         />
                         
                         {/* Overlay with information */}
@@ -542,7 +595,7 @@ const Portfolio = () => {
                             {/* Play button */}
                             <Dialog>
                               <DialogTrigger asChild>
-                                <button className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center">
+                                <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
                                   <Play size={20} />
                                 </button>
                               </DialogTrigger>
@@ -558,7 +611,6 @@ const Portfolio = () => {
                                     autoPlay
                                     playsInline
                                     preload="auto"
-                                    onError={handleVideoError}
                                   />
                                 </div>
                               </DialogContent>
@@ -566,7 +618,7 @@ const Portfolio = () => {
                             
                             {/* Featured toggle button */}
                             <button 
-                              className={`px-3 py-1.5 ${project.featured ? 'bg-purple-600 text-white' : 'bg-white/20 text-white'} text-sm rounded-full hover:bg-purple-600/70 hover:text-white`}
+                              className={`px-3 py-1.5 ${project.featured ? 'bg-doodle-purple text-white' : 'bg-white/20 text-white'} text-sm rounded-full hover:bg-doodle-purple/70 hover:text-white`}
                               onClick={() => toggleFeaturedVideo(project.id)}
                             >
                               {project.featured ? 'Featured' : 'Feature Video'}
@@ -584,11 +636,11 @@ const Portfolio = () => {
                                   <DialogTitle>Change Category</DialogTitle>
                                 </DialogHeader>
                                 <div className="grid grid-cols-1 gap-2 mt-4">
-                                  {categories.slice(1).map((cat) => (
+                                  {categories.slice(1).map((cat) => ( // Skip "All Videos"
                                     <Button 
                                       key={cat.id} 
                                       variant="outline" 
-                                      className={cat.id === project.category ? "bg-purple-600 text-white" : ""}
+                                      className={cat.id === project.category ? "bg-doodle-purple text-white" : ""}
                                       onClick={() => {
                                         handleCategoryUpdate(project.id, cat.id);
                                       }}
@@ -604,7 +656,7 @@ const Portfolio = () => {
                         
                         {/* Featured badge */}
                         {project.featured && (
-                          <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                          <div className="absolute top-2 right-2 bg-doodle-purple text-white text-xs px-2 py-1 rounded-full">
                             Featured
                           </div>
                         )}
@@ -641,3 +693,5 @@ const Portfolio = () => {
 };
 
 export default Portfolio;
+
+
