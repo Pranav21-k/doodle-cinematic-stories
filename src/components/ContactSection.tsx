@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Send, MessageCircle } from "lucide-react";
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -73,7 +73,12 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <h4 className="font-medium">Phone</h4>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
+                    <a 
+                      href="tel:+12012841297" 
+                      className="text-gray-600 hover:text-doodle-purple transition-colors duration-300 cursor-pointer"
+                    >
+                      +1 (201) 284-1297
+                    </a>
                   </div>
                 </div>
                 
@@ -84,7 +89,30 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <h4 className="font-medium">Email</h4>
-                    <p className="text-gray-600">hello@doodleproduction.com</p>
+                    <a 
+                      href="mailto:pranav.kt@gmail.com" 
+                      className="text-gray-600 hover:text-doodle-purple transition-colors duration-300 cursor-pointer"
+                    >
+                      pranav.kt@gmail.com
+                    </a>
+                  </div>
+                </div>
+
+                {/* WhatsApp */}
+                <div className="flex items-start">
+                  <div className="bg-green-500/10 p-3 rounded-full mr-4">
+                    <MessageCircle size={20} className="text-green-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">WhatsApp</h4>
+                    <a 
+                      href="https://wa.me/12012841297" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-green-500 transition-colors duration-300 cursor-pointer"
+                    >
+                      +1 (201) 284-1297
+                    </a>
                   </div>
                 </div>
                 
@@ -96,9 +124,8 @@ const ContactSection = () => {
                   <div>
                     <h4 className="font-medium">Studio Location</h4>
                     <p className="text-gray-600">
-                      123 Creative Avenue<br />
-                      Suite 200<br />
-                      Los Angeles, CA 90012
+                      430 Central Ave<br />
+                      Jersey City, NJ 07307
                     </p>
                   </div>
                 </div>
@@ -107,15 +134,23 @@ const ContactSection = () => {
               {/* Google Maps Embed */}
               <div className="mt-8 h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3305.7351!2d-118.2436849!3d34.0522265!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2c75ddc27da13%3A0xe22fdf6f254608f4!2sDowntown%20Los%20Angeles%2C%20CA%2C%20USA!5e0!3m2!1sen!2sus!4v1652389888851!5m2!1sen!2sus"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.175807!2d-74.0463589!3d40.7286796!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c250d32e2977a9%3A0x1234567890abcdef!2s430%20Central%20Ave%2C%20Jersey%20City%2C%20NJ%2007307%2C%20USA!5e0!3m2!1sen!2sus!4v1652389888851!5m2!1sen!2sus"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Doodle Production Studio Location"
+                  title="Doodle Production Studio Location - Jersey City, NJ"
                 ></iframe>
+              </div>
+
+              {/* Contact Person */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div className="text-center">
+                  <h4 className="font-bold text-gray-900 mb-1">Pranav Kottappurath</h4>
+                  <p className="text-sm text-purple-600 font-medium">Creative Director & Founder</p>
+                </div>
               </div>
             </div>
           </div>
