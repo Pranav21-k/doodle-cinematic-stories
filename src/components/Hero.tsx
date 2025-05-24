@@ -55,15 +55,15 @@ const Hero = () => {
             <Button 
               className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-0"
               onClick={() => {
-                const aboutSection = document.getElementById('about');
-                if (aboutSection) {
-                  aboutSection.scrollIntoView({ behavior: 'smooth' });
+                const portfolioSection = document.getElementById('portfolio');
+                if (portfolioSection) {
+                  portfolioSection.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
             >
               <span className="flex items-center gap-3">
                 <Play size={20} />
-                See Our Work 
+                Our Videos 
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Button>

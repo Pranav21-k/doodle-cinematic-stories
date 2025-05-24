@@ -315,7 +315,7 @@ const Portfolio = () => {
       <div className="container mx-auto px-6 md:px-12">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in-up">
-          <h2 className="section-title animate-fade-in-up">Your Videos</h2>
+          <h2 className="section-title animate-fade-in-up">Our Videos</h2>
           <p className="section-subtitle max-w-2xl mx-auto animate-fade-in-up">
             Watch and explore videos in our portfolio.
           </p>
@@ -693,5 +693,3 @@ const Portfolio = () => {
 };
 
 export default Portfolio;
-
-
