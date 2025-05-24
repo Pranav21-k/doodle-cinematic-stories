@@ -6,7 +6,6 @@ const AboutUs = () => {
   const [isInView, setIsInView] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
 
   // Intersection Observer for animations
   useEffect(() => {
@@ -30,20 +29,6 @@ const AboutUs = () => {
       setCurrentSlide((prev) => (prev + 1) % teamMembers.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Parallax effect for images
-  useEffect(() => {
-    const handleScroll = () => {
-      if (imageRef.current) {
-        const scrolled = window.pageYOffset;
-        const rate = scrolled * -0.5;
-        imageRef.current.style.transform = `translateY(${rate}px)`;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const values = [
@@ -123,17 +108,14 @@ const AboutUs = () => {
         </div>
         
         {/* Revolutionary Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
-          {/* Enhanced Image/Video Side */}
-          <div className="relative animate-fade-in-up">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start mb-24">
+          {/* Smaller Static Image Side */}
+          <div className="lg:col-span-1 animate-fade-in-up">
             <div className="relative group">
-              {/* Main Image Container */}
-              <div 
-                ref={imageRef}
-                className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-700 transform hover:scale-105"
-              >
+              {/* Main Image Container - Smaller and Static */}
+              <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-700 transform hover:scale-105">
                 <img 
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80"
                   alt="Doodle Production Team Collaborating" 
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
@@ -144,22 +126,21 @@ const AboutUs = () => {
               <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full opacity-80 animate-float blur-xl"></div>
               <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full opacity-60 animate-float-reverse blur-xl"></div>
               
-              {/* Team Member Carousel */}
-              <div className="absolute top-6 left-6 right-6">
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/20 transform transition-all duration-500 hover:scale-105">
-                  <div className="flex items-center gap-4">
+              {/* Team Member Carousel - Positioned at bottom */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-xl border border-white/20 transform transition-all duration-500 hover:scale-105">
+                  <div className="flex items-center gap-3">
                     <div className="relative">
                       <img 
                         src={teamMembers[currentSlide].image}
                         alt={teamMembers[currentSlide].name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-purple-300"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-purple-300"
                       />
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-gray-900">{teamMembers[currentSlide].name}</h4>
-                      <p className="text-purple-600 text-sm font-medium">{teamMembers[currentSlide].role}</p>
-                      <p className="text-gray-600 text-xs mt-1">{teamMembers[currentSlide].bio}</p>
+                      <h4 className="font-bold text-gray-900 text-sm">{teamMembers[currentSlide].name}</h4>
+                      <p className="text-purple-600 text-xs font-medium">{teamMembers[currentSlide].role}</p>
                     </div>
                   </div>
                 </div>
@@ -168,16 +149,16 @@ const AboutUs = () => {
               {/* Interactive Hover Elements */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 animate-pulse">
-                    <Users size={32} className="text-white" />
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 animate-pulse">
+                    <Users size={24} className="text-white" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Enhanced Text Side */}
-          <div className="animate-fade-in-up space-y-8">
+          {/* Enhanced Text Side - Takes more space */}
+          <div className="lg:col-span-2 animate-fade-in-up space-y-8">
             <div>
               <h3 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
                 Our Story
