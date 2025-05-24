@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Video, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -53,20 +54,17 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
-  const [isAutoplay, setIsAutoplay] = useState(true); // Default to autoplay on
+  const [isAutoplay, setIsAutoplay] = useState(true);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
-  const [previewLimit, setPreviewLimit] = useState(4); // Limit of videos to show in preview
+  const [previewLimit, setPreviewLimit] = useState(4);
   const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   
-  // In a real application, this would be stored securely on the server
-  // This is just for demonstration purposes
   const ADMIN_PASSWORD = "admin123"; 
   
-  // Updated categories based on user's request
   const categories = [
     { id: 'all', name: 'All Videos' },
     { id: 'fashion', name: 'Fashion & Modeling' },
@@ -75,10 +73,8 @@ const Portfolio = () => {
     { id: 'brand', name: 'Brand Collaborations' }
   ];
   
-  // Updated to only include user uploads - no default videos
   const [projects, setProjects] = useState<Project[]>([]);
 
-  // Detect if we're in development mode
   const isDevelopment = import.meta.env.MODE === 'development';
 
   // Load videos from local storage on component mount
@@ -92,7 +88,6 @@ const Portfolio = () => {
           try {
             const parsedVideos = JSON.parse(savedVideos);
             
-            // Check if first video is accessible
             const firstVideo = parsedVideos[0];
             if (firstVideo && firstVideo.videoUrl) {
               const videoEl = document.createElement('video');
@@ -141,20 +136,16 @@ const Portfolio = () => {
   // Toggle a video's featured status
   const toggleFeaturedVideo = (id: number) => {
     setProjects(prev => {
-      // Count how many videos are currently featured
       const featuredCount = prev.filter(p => p.featured).length;
       
       const updated = prev.map(project => {
         if (project.id === id) {
-          // If it's already featured, we can always unfeature it
           if (project.featured) {
             return { ...project, featured: false };
           } 
-          // If it's not featured and we have less than the limit, we can feature it
           else if (featuredCount < previewLimit) {
             return { ...project, featured: true };
           } 
-          // Otherwise, show a toast that we've reached the limit
           else {
             toast.error(`You can only feature ${previewLimit} videos. Unfeature one first.`);
             return project;
@@ -163,7 +154,6 @@ const Portfolio = () => {
         return project;
       });
       
-      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
@@ -176,7 +166,6 @@ const Portfolio = () => {
     if (featured.length >= previewLimit) {
       return featured.slice(0, previewLimit);
     } else {
-      // If we don't have enough featured videos, add some non-featured ones
       const nonFeatured = projects.filter(p => !p.featured);
       return [...featured, ...nonFeatured].slice(0, previewLimit);
     }
@@ -190,7 +179,7 @@ const Portfolio = () => {
           const nextIndex = (prevIndex + 1) % showcaseVideos.length;
           return nextIndex;
         });
-      }, 8000); // Change video every 8 seconds
+      }, 8000);
       
       setAutoplayInterval(interval);
       return () => clearInterval(interval);
@@ -224,7 +213,6 @@ const Portfolio = () => {
       const updated = prev.map(project => 
         project.id === id ? { ...project, category } : project
       );
-      // Save updated projects to local storage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       toast.success("Category updated");
       return updated;
@@ -270,12 +258,10 @@ const Portfolio = () => {
           throw new Error("Invalid format: Expected an array");
         }
         
-        // Basic validation to ensure we have the right format
         if (importedProjects.some(p => !p.title || !p.videoUrl)) {
           throw new Error("Invalid format: Missing required fields");
         }
         
-        // Merge with existing videos, avoiding duplicates by ID
         const existingIds = projects.map(p => p.id);
         const newProjects = importedProjects.filter(p => !existingIds.includes(p.id));
         const mergedProjects = [...projects, ...newProjects];
@@ -288,7 +274,6 @@ const Portfolio = () => {
         toast.error("Failed to import videos: Invalid format");
       }
       
-      // Reset the input
       e.target.value = '';
     };
     
@@ -303,7 +288,6 @@ const Portfolio = () => {
   // Check if a video URL is valid
   const checkVideoURL = (url: string) => {
     try {
-      // Test if URL is valid (starts with http or /)
       return url && (url.startsWith('http') || url.startsWith('/'));
     } catch (e) {
       return false;
@@ -636,7 +620,7 @@ const Portfolio = () => {
                                   <DialogTitle>Change Category</DialogTitle>
                                 </DialogHeader>
                                 <div className="grid grid-cols-1 gap-2 mt-4">
-                                  {categories.slice(1).map((cat) => ( // Skip "All Videos"
+                                  {categories.slice(1).map((cat) => (
                                     <Button 
                                       key={cat.id} 
                                       variant="outline" 
@@ -693,5 +677,3 @@ const Portfolio = () => {
 };
 
 export default Portfolio;
-
-
