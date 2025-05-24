@@ -94,13 +94,6 @@ const AboutUs = () => {
     }
   ];
 
-  const stats = [
-    { number: "500+", label: "Projects Delivered", icon: "🎬" },
-    { number: "50+", label: "Awards Won", icon: "🏆" },
-    { number: "200+", label: "Happy Clients", icon: "😊" },
-    { number: "10", label: "Years Experience", icon: "⭐" }
-  ];
-
   return (
     <section id="about" ref={sectionRef} className="relative py-32 bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden">
       {/* Animated Background Elements */}
@@ -246,28 +239,6 @@ const AboutUs = () => {
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Statistics Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 animate-fade-in-up">
-          {stats.map((stat, index) => (
-            <div 
-              key={stat.label}
-              className="text-center group cursor-pointer transform transition-all duration-500 hover:scale-110"
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              <div className="relative mb-4">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:rotate-12">
-                  <span className="text-3xl">{stat.icon}</span>
-                </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-bounce"></div>
-              </div>
-              <h4 className="text-4xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
-                {stat.number}
-              </h4>
-              <p className="text-gray-600 font-medium">{stat.label}</p>
-            </div>
-          ))}
         </div>
 
         {/* Call to Action */}
