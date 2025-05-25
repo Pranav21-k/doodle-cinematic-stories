@@ -75,6 +75,27 @@ const Portfolio = () => {
     { id: 'brand', name: 'Brand Collaborations' }
   ];
   
+  // --------------------------------------------------------------------
+  // Fallback videos located in /public/modelling so that a fresh visitor
+  // always sees content even before any admin upload occurs.
+  const modellingFiles = [
+    '01.mp4', '02.mp4', '03.mp4', '04.mp4', '05.mp4', '06.mp4',
+    '07.mp4', '08.mp4', '1.mp4', '2.mp4', '3.mp4', '4.mp4',
+    'ad1.mp4', 'f1.mp4', 'f2.mp4', 'p2.mp4', 'p3.mp4', 'p4.mp4',
+    'p5.mp4', 'p6.mp4', 't1.mp4', 't2.mp4', 't3.mp4'
+  ];
+
+  const DEFAULT_PROJECTS: Project[] = modellingFiles.map((file, idx) => ({
+    id: idx + 1,
+    title: `Video ${idx + 1}`,
+    client: 'Doodle',
+    category: 'fashion',
+    thumbnail: `/modelling/${file}`,
+    videoUrl: `/modelling/${file}`,
+    featured: idx < 4, // first few highlighted in carousel
+  }));
+  // --------------------------------------------------------------------
+  
   const [projects, setProjects] = useState<Project[]>([]);
 
   // Load videos from local storage on component mount
@@ -85,15 +106,30 @@ const Portfolio = () => {
         const savedVideos = localStorage.getItem(STORAGE_KEY);
         
         if (savedVideos) {
-          const parsedVideos = JSON.parse(savedVideos);
-          console.log('Parsed videos from localStorage:', parsedVideos.length);
-          setProjects(parsedVideos);
+          try {
+            const parsedVideos = JSON.parse(savedVideos);
+            if (Array.isArray(parsedVideos) && parsedVideos.length > 0) {
+              console.log('Parsed videos from localStorage:', parsedVideos.length);
+              setProjects(parsedVideos);
+              setVideosLoaded(true);
+              setLoadingError(null);
+              setIsInitialLoad(false);
+            } else {
+              throw new Error('Empty or invalid saved videos');
+            }
+          } catch (e) {
+            console.warn('Falling back to default videos due to error:', e);
+            setProjects(DEFAULT_PROJECTS);
+            setVideosLoaded(true);
+            setLoadingError(null);
+            setIsInitialLoad(false);
+          }
+        } else {
+          // No videos in storage – use bundled defaults
+          console.log('No videos found in localStorage, loading defaults');
+          setProjects(DEFAULT_PROJECTS);
           setVideosLoaded(true);
           setLoadingError(null);
-          setIsInitialLoad(false);
-        } else {
-          console.log('No videos found in localStorage');
-          setLoadingError('No videos found. Please refresh the page to load default videos.');
           setIsInitialLoad(false);
         }
       } catch (error) {
