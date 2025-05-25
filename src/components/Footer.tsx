@@ -64,7 +64,7 @@ const Footer = () => {
               <p className="text-gray-400 mb-2">123 Creative Avenue</p>
               <p className="text-gray-400 mb-4">Los Angeles, CA 90012</p>
               <p className="text-gray-400 mb-2">doodleproduction.nyc@gmail.com</p>
-              <p className="text-gray-400">+1 (555) 123-4567</p>
+              <p className="text-gray-400">+1 201-284-1297</p>
             </address>
           </div>
         </div>
