@@ -46,6 +46,105 @@ type Project = {
   featured?: boolean;
 };
 
+// Smart video component that falls back to image
+const VideoWithFallback: React.FC<{
+  videoUrl: string;
+  thumbnail: string;
+  title: string;
+  className?: string;
+  autoPlay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
+  onMouseOver?: () => void;
+  onMouseOut?: () => void;
+}> = ({ videoUrl, thumbnail, title, className = "", autoPlay = false, muted = true, loop = false, controls = false, onMouseOver, onMouseOut }) => {
+  const [useVideo, setUseVideo] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleVideoError = () => {
+    console.log(`Video failed to load: ${videoUrl}, falling back to image`);
+    setUseVideo(false);
+    setIsLoading(false);
+  };
+
+  const handleVideoLoad = () => {
+    console.log(`Video loaded successfully: ${videoUrl}`);
+    setIsLoading(false);
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.target as HTMLImageElement;
+    img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
+  };
+
+  if (useVideo) {
+    return (
+      <div className="relative w-full h-full">
+        {isLoading && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
+          </div>
+        )}
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className={`w-full h-full object-cover ${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+          autoPlay={autoPlay}
+          muted={muted}
+          loop={loop}
+          controls={controls}
+          playsInline
+          preload="metadata"
+          poster={thumbnail}
+          onLoadedData={handleVideoLoad}
+          onError={handleVideoError}
+          onMouseOver={onMouseOver}
+          onMouseOut={onMouseOut}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: show different content based on whether it's a dialog or preview
+  if (controls) {
+    // Dialog fallback - show informative message
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
+        <div className="text-center p-8">
+          <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
+            <Play size={32} className="text-white ml-1" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+          <p className="text-gray-600 mb-4">Video temporarily unavailable</p>
+          <p className="text-sm text-gray-500">
+            We're working on optimizing video delivery. Please check back soon.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Preview fallback - show image with play overlay
+  return (
+    <div className="relative w-full h-full">
+      <img
+        src={thumbnail}
+        alt={title}
+        className={`w-full h-full object-cover ${className}`}
+        onError={handleImageError}
+      />
+      {/* Play overlay to indicate it's a video */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+          <Play size={24} className="text-white ml-1" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Storage key for local storage
 const STORAGE_KEY = 'portfolio_videos';
 
@@ -101,7 +200,7 @@ const Portfolio = () => {
     client: 'Doodle',
     category: 'fashion',
     thumbnail: placeholderImages[idx % placeholderImages.length],
-    videoUrl: placeholderImages[idx % placeholderImages.length], // Use placeholder as video URL for now
+    videoUrl: `/modelling/${file}`,
     featured: idx < 4, // first few highlighted in carousel
   }));
   // --------------------------------------------------------------------
@@ -394,14 +493,11 @@ const Portfolio = () => {
                       {projects.map(project => (
                         <div key={project.id} className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md cursor-pointer animate-card-hover" onClick={() => toggleFeaturedVideo(project.id)}>
                           <div className="relative w-24 h-16 rounded overflow-hidden">
-                            <img
-                              src={project.thumbnail}
-                              alt={project.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
-                              }}
+                            <VideoWithFallback
+                              videoUrl={project.videoUrl}
+                              thumbnail={project.thumbnail}
+                              title={project.title}
+                              muted={true}
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
@@ -488,15 +584,16 @@ const Portfolio = () => {
             {/* Main Feature Video - Fixed positioning */}
             <div className="relative w-full aspect-video rounded-lg sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-2xl group">
               {showcaseVideos[activeVideoIndex] && showcaseVideos[activeVideoIndex].videoUrl && (
-                <img
+                <VideoWithFallback
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
-                  src={showcaseVideos[activeVideoIndex].thumbnail}
-                  alt={showcaseVideos[activeVideoIndex].title}
-                  className="w-full h-full object-cover transition-all duration-700"
-                  onError={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
-                  }}
+                  videoUrl={showcaseVideos[activeVideoIndex].videoUrl}
+                  thumbnail={showcaseVideos[activeVideoIndex].thumbnail}
+                  title={showcaseVideos[activeVideoIndex].title}
+                  className="transition-all duration-700"
+                  autoPlay={true}
+                  muted={true}
+                  loop={true}
+                  controls={false}
                 />
               )}
               
@@ -537,13 +634,16 @@ const Portfolio = () => {
                       `}
                       onClick={() => setActiveVideoIndex(index)}
                     >
-                      <img 
-                        src={video.thumbnail} 
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
+                      <VideoWithFallback
+                        videoUrl={video.videoUrl}
+                        thumbnail={video.thumbnail}
+                        title={video.title}
+                        muted={true}
+                        onMouseOver={() => {
+                          // Optional: add hover effects
+                        }}
+                        onMouseOut={() => {
+                          // Optional: remove hover effects  
                         }}
                       />
                       
@@ -590,25 +690,19 @@ const Portfolio = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
-                        {/* Show image with play overlay for now */}
-                        <div className="relative w-full h-full">
-                          <img
-                            src={project.thumbnail}
-                            alt={project.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to a default image if thumbnail fails
-                              const img = e.target as HTMLImageElement;
-                              img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
-                            }}
-                          />
-                          {/* Play overlay to indicate it's a video */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                              <Play size={24} className="text-white ml-1" />
-                            </div>
-                          </div>
-                        </div>
+                        <VideoWithFallback
+                          videoUrl={project.videoUrl}
+                          thumbnail={project.thumbnail}
+                          title={project.title}
+                          muted={true}
+                          loop={true}
+                          onMouseOver={() => {
+                            // Video will auto-play on hover if it loads successfully
+                          }}
+                          onMouseOut={() => {
+                            // Video will pause on mouse out if it loads successfully
+                          }}
+                        />
                         
                         {/* Overlay with information */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-3 sm:p-4 md:p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -628,19 +722,15 @@ const Portfolio = () => {
                                   <DialogTitle>{project.title}</DialogTitle>
                                 </DialogHeader>
                                 <div className="aspect-video w-full relative">
-                                  {/* Video preview placeholder */}
-                                  <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
-                                    <div className="text-center p-8">
-                                      <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                                        <Play size={32} className="text-white ml-1" />
-                                      </div>
-                                      <h3 className="text-xl font-bold text-gray-800 mb-2">{project.title}</h3>
-                                      <p className="text-gray-600 mb-4">Video content coming soon</p>
-                                      <p className="text-sm text-gray-500">
-                                        We're working on optimizing video delivery for the best viewing experience.
-                                      </p>
-                                    </div>
-                                  </div>
+                                  <VideoWithFallback
+                                    videoUrl={project.videoUrl}
+                                    thumbnail={project.thumbnail}
+                                    title={project.title}
+                                    autoPlay={true}
+                                    muted={false}
+                                    controls={true}
+                                    className="rounded-lg"
+                                  />
                                 </div>
                               </DialogContent>
                             </Dialog>
