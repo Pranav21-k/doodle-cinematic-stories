@@ -101,7 +101,7 @@ const Portfolio = () => {
     client: 'Doodle',
     category: 'fashion',
     thumbnail: placeholderImages[idx % placeholderImages.length],
-    videoUrl: `/modelling/${file}`,
+    videoUrl: placeholderImages[idx % placeholderImages.length], // Use placeholder as video URL for now
     featured: idx < 4, // first few highlighted in carousel
   }));
   // --------------------------------------------------------------------
@@ -394,46 +394,13 @@ const Portfolio = () => {
                       {projects.map(project => (
                         <div key={project.id} className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md cursor-pointer animate-card-hover" onClick={() => toggleFeaturedVideo(project.id)}>
                           <div className="relative w-24 h-16 rounded overflow-hidden">
-                            <video
-                              src={project.videoUrl}
-                              className="w-full h-full object-cover mobile-video"
-                              muted
-                              preload="auto"
-                              poster={project.thumbnail || project.videoUrl}
-                              playsInline
-                              webkit-playsinline="true"
-                              onLoadedData={(e) => {
-                                // Ensure video is visible once loaded
-                                const videoEl = e.target as HTMLVideoElement;
-                                videoEl.style.opacity = '1';
-                              }}
+                            <img
+                              src={project.thumbnail}
+                              alt={project.title}
+                              className="w-full h-full object-cover"
                               onError={(e) => {
-                                console.error(`Error loading thumbnail video ${project.id}:`, e);
-                                // Fallback: show placeholder image
-                                const videoEl = e.target as HTMLVideoElement;
-                                const container = videoEl.parentElement;
-                                if (container) {
-                                  // Hide the video and show placeholder
-                                  videoEl.style.display = 'none';
-                                  const img = document.createElement('img');
-                                  img.src = project.thumbnail;
-                                  img.className = 'w-full h-full object-cover';
-                                  img.alt = project.title;
-                                  img.style.opacity = '1';
-                                  container.appendChild(img);
-                                  
-                                  // Add a play overlay to indicate it's a video
-                                  const overlay = document.createElement('div');
-                                  overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
-                                  overlay.innerHTML = `
-                                    <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                                      <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M8 5v14l11-7z"/>
-                                      </svg>
-                                    </div>
-                                  `;
-                                  container.appendChild(overlay);
-                                }
+                                const img = e.target as HTMLImageElement;
+                                img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
                               }}
                             />
                             {project.featured && (
@@ -521,30 +488,14 @@ const Portfolio = () => {
             {/* Main Feature Video - Fixed positioning */}
             <div className="relative w-full aspect-video rounded-lg sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-2xl group">
               {showcaseVideos[activeVideoIndex] && showcaseVideos[activeVideoIndex].videoUrl && (
-                <video
+                <img
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
-                  src={showcaseVideos[activeVideoIndex].videoUrl}
-                  className="w-full h-full object-cover transition-all duration-700 mobile-video"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  webkit-playsinline="true"
-                  preload="auto"
-                  poster={showcaseVideos[activeVideoIndex].thumbnail || showcaseVideos[activeVideoIndex].videoUrl}
-                  onLoadedData={(e) => {
-                    // Video is ready to play smoothly
-                    const video = e.target as HTMLVideoElement;
-                    video.style.opacity = '1';
-                    console.log(`✅ Feature video loaded: ${showcaseVideos[activeVideoIndex].videoUrl}`);
-                  }}
+                  src={showcaseVideos[activeVideoIndex].thumbnail}
+                  alt={showcaseVideos[activeVideoIndex].title}
+                  className="w-full h-full object-cover transition-all duration-700"
                   onError={(e) => {
-                    const video = e.target as HTMLVideoElement;
-                    console.error('❌ Error loading feature video:', showcaseVideos[activeVideoIndex].videoUrl, video.error);
-                    // Try to reload with a different approach
-                    setTimeout(() => {
-                      video.load();
-                    }, 1000);
+                    const img = e.target as HTMLImageElement;
+                    img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
                   }}
                 />
               )}
@@ -586,46 +537,13 @@ const Portfolio = () => {
                       `}
                       onClick={() => setActiveVideoIndex(index)}
                     >
-                      <video 
-                        src={video.videoUrl} 
-                        className="w-full h-full object-cover mobile-video"
-                        muted
-                        preload="auto"
-                        poster={video.thumbnail || video.videoUrl}
-                        playsInline
-                        webkit-playsinline="true"
-                        onLoadedData={(e) => {
-                          // Ensure video is visible once loaded
-                          const videoEl = e.target as HTMLVideoElement;
-                          videoEl.style.opacity = '1';
-                        }}
+                      <img 
+                        src={video.thumbnail} 
+                        alt={video.title}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
-                          console.error(`Error loading thumbnail video ${video.id}:`, e);
-                          // Fallback: show placeholder image
-                          const videoEl = e.target as HTMLVideoElement;
-                          const container = videoEl.parentElement;
-                          if (container) {
-                            // Hide the video and show placeholder
-                            videoEl.style.display = 'none';
-                            const img = document.createElement('img');
-                            img.src = video.thumbnail;
-                            img.className = 'w-full h-full object-cover';
-                            img.alt = video.title;
-                            img.style.opacity = '1';
-                            container.appendChild(img);
-                            
-                            // Add a play overlay to indicate it's a video
-                            const overlay = document.createElement('div');
-                            overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
-                            overlay.innerHTML = `
-                              <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M8 5v14l11-7z"/>
-                                </svg>
-                              </div>
-                            `;
-                            container.appendChild(overlay);
-                          }
+                          const img = e.target as HTMLImageElement;
+                          img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
                         }}
                       />
                       
@@ -672,61 +590,25 @@ const Portfolio = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
-                        <video
-                          src={project.videoUrl}
-                          className="w-full h-full object-cover mobile-video"
-                          muted
-                          loop
-                          playsInline
-                          webkit-playsinline="true"
-                          preload="auto"
-                          poster={project.thumbnail || project.videoUrl}
-                          onMouseOver={(e) => {
-                            const video = e.target as HTMLVideoElement;
-                            setTimeout(() => {
-                              video.play().catch(() => {
-                                // Ignore autoplay errors
-                              });
-                            }, 100);
-                          }}
-                          onMouseOut={(e) => {
-                            const video = e.target as HTMLVideoElement;
-                            video.pause();
-                            video.currentTime = 0;
-                          }}
-                          onLoadedData={(e) => {
-                            const video = e.target as HTMLVideoElement;
-                            video.style.opacity = '1';
-                          }}
-                          onError={(e) => {
-                            console.error(`Error loading grid video ${project.id}:`, e);
-                            // Fallback: show placeholder image
-                            const videoEl = e.target as HTMLVideoElement;
-                            const container = videoEl.parentElement;
-                            if (container) {
-                              // Hide the video and show placeholder
-                              videoEl.style.display = 'none';
-                              const img = document.createElement('img');
-                              img.src = project.thumbnail;
-                              img.className = 'w-full h-full object-cover';
-                              img.alt = project.title;
-                              img.style.opacity = '1';
-                              container.appendChild(img);
-                              
-                              // Add a play overlay to indicate it's a video
-                              const overlay = document.createElement('div');
-                              overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
-                              overlay.innerHTML = `
-                                <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                                  <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z"/>
-                                  </svg>
-                                </div>
-                              `;
-                              container.appendChild(overlay);
-                            }
-                          }}
-                        />
+                        {/* Show image with play overlay for now */}
+                        <div className="relative w-full h-full">
+                          <img
+                            src={project.thumbnail}
+                            alt={project.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to a default image if thumbnail fails
+                              const img = e.target as HTMLImageElement;
+                              img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
+                            }}
+                          />
+                          {/* Play overlay to indicate it's a video */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                              <Play size={24} className="text-white ml-1" />
+                            </div>
+                          </div>
+                        </div>
                         
                         {/* Overlay with information */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-3 sm:p-4 md:p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -746,52 +628,19 @@ const Portfolio = () => {
                                   <DialogTitle>{project.title}</DialogTitle>
                                 </DialogHeader>
                                 <div className="aspect-video w-full relative">
-                                  {/* Loading overlay */}
-                                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center rounded-lg">
-                                    <div className="flex flex-col items-center gap-3">
-                                      <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                                      <p className="text-gray-600 text-sm">Loading video...</p>
+                                  {/* Video preview placeholder */}
+                                  <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
+                                    <div className="text-center p-8">
+                                      <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
+                                        <Play size={32} className="text-white ml-1" />
+                                      </div>
+                                      <h3 className="text-xl font-bold text-gray-800 mb-2">{project.title}</h3>
+                                      <p className="text-gray-600 mb-4">Video content coming soon</p>
+                                      <p className="text-sm text-gray-500">
+                                        We're working on optimizing video delivery for the best viewing experience.
+                                      </p>
                                     </div>
                                   </div>
-                                  <video 
-                                    src={project.videoUrl} 
-                                    controls 
-                                    className="w-full h-full object-contain relative z-10"
-                                    autoPlay
-                                    playsInline
-                                    preload="auto"
-                                    onLoadStart={() => {
-                                      // Show loading state
-                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
-                                      if (loadingDiv) {
-                                        (loadingDiv as HTMLElement).style.display = 'flex';
-                                      }
-                                    }}
-                                    onCanPlay={() => {
-                                      // Hide loading state when video can play
-                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
-                                      if (loadingDiv) {
-                                        (loadingDiv as HTMLElement).style.display = 'none';
-                                      }
-                                    }}
-                                    onError={(e) => {
-                                      console.error('Error loading dialog video:', e);
-                                      // Hide loading and show error
-                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
-                                      if (loadingDiv) {
-                                        (loadingDiv as HTMLElement).innerHTML = `
-                                          <div class="flex flex-col items-center gap-3">
-                                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                              </svg>
-                                            </div>
-                                            <p class="text-red-600 text-sm">Error loading video</p>
-                                          </div>
-                                        `;
-                                      }
-                                    }}
-                                  />
                                 </div>
                               </DialogContent>
                             </Dialog>
