@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -148,6 +147,69 @@
     
     .mobile-safe-text {
       text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Video specific mobile improvements */
+    video {
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Better touch targets for mobile */
+    .card-hover {
+      @apply transition-all duration-200;
+    }
+
+    /* Improved text visibility on mobile */
+    .mobile-safe-text {
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.95);
+      font-weight: 700 !important;
+      letter-spacing: 0.025em;
+    }
+
+    /* Mobile video overlay improvements */
+    .group .opacity-0 {
+      opacity: 0.7 !important;
+    }
+
+    /* Better scrolling on mobile */
+    .overflow-x-auto {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Tablet specific adjustments */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .section-title {
+      @apply text-3xl md:text-4xl lg:text-5xl;
+    }
+
+    video {
+      object-fit: cover;
+    }
+  }
+
+  /* Touch device specific improvements */
+  @media (hover: none) and (pointer: coarse) {
+    .card-hover:hover {
+      transform: none;
+    }
+
+    .group:active .opacity-0 {
+      opacity: 1 !important;
+    }
+
+    /* Make overlays more visible on touch devices */
+    .group .opacity-0 {
+      opacity: 0.8;
+    }
+
+    /* Better button sizing for touch */
+    button {
+      min-height: 44px;
+      min-width: 44px;
     }
   }
 }

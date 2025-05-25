@@ -411,9 +411,9 @@ const Portfolio = () => {
         {showcaseVideos.length > 0 && videosLoaded && !loadingError ? (
           <div className="mb-16 relative animate-fade-in-up">
             {/* Controls - Fixed positioning */}
-            <div className="flex justify-between items-center mb-6 relative z-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 relative z-10 gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 animate-fade-in-up">
+                <span className="text-xs sm:text-sm text-gray-500 animate-fade-in-up">
                   Showing {Math.min(showcaseVideos.length, previewLimit)} of {projects.length} videos
                 </span>
               </div>
@@ -423,15 +423,16 @@ const Portfolio = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsAutoplay(!isAutoplay)}
-                className="relative z-20 bg-white/90 backdrop-blur-sm border-purple-300/30 hover:bg-purple-600 hover:text-white transition-all duration-300"
+                className="relative z-20 bg-white/90 backdrop-blur-sm border-purple-300/30 hover:bg-purple-600 hover:text-white transition-all duration-300 text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
               >
                 <Video size={16} />
-                <span className="ml-2">{isAutoplay ? 'Stop Rotation' : 'Start Rotation'}</span>
+                <span className="ml-1 sm:ml-2 hidden sm:inline">{isAutoplay ? 'Stop Rotation' : 'Start Rotation'}</span>
+                <span className="ml-1 sm:hidden">{isAutoplay ? 'Stop' : 'Play'}</span>
               </Button>
             </div>
             
             {/* Main Feature Video - Fixed positioning */}
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8 shadow-2xl group">
+            <div className="relative w-full aspect-video rounded-lg sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-2xl group">
               {showcaseVideos[activeVideoIndex] && showcaseVideos[activeVideoIndex].videoUrl && (
                 <video
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
@@ -450,12 +451,12 @@ const Portfolio = () => {
               
               {/* Overlay - Fixed positioning */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                <div className="absolute bottom-0 left-0 right-0 p-8">
-                  <div className="backdrop-blur-sm bg-black/30 rounded-xl p-6">
-                    <h3 className="text-white text-3xl font-bold mb-2">
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
+                  <div className="backdrop-blur-sm bg-black/30 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+                    <h3 className="text-white text-lg sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 mobile-safe-text">
                       {showcaseVideos[activeVideoIndex]?.title}
                     </h3>
-                    <p className="text-purple-200 text-lg">
+                    <p className="text-purple-200 text-sm sm:text-base md:text-lg mobile-safe-text">
                       {showcaseVideos[activeVideoIndex]?.client}
                     </p>
                   </div>
@@ -464,20 +465,20 @@ const Portfolio = () => {
               
               {/* Play indicator - Fixed positioning */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <Play size={32} className="text-white ml-1" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Play size={20} className="text-white ml-1 sm:ml-1 md:ml-1" />
                 </div>
               </div>
             </div>
             
             {/* Thumbnail Navigation - Fixed scrolling and alignment */}
             <div className="relative">
-              <div className="overflow-x-auto pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <div className="flex space-x-6 px-2 min-w-max">
+              <div className="overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div className="flex space-x-3 sm:space-x-4 md:space-x-6 px-2 min-w-max">
                   {showcaseVideos.map((video, index) => (
                     <div 
                       key={`thumb-${video.id}-${index}`}
-                      className={`flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all duration-500 relative
+                      className={`flex-shrink-0 w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-32 rounded-lg sm:rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all duration-500 relative
                         ${index === activeVideoIndex 
                           ? 'ring-4 ring-purple-500 scale-105 shadow-purple-500/50' 
                           : 'opacity-80 hover:opacity-100 hover:scale-102'
@@ -496,8 +497,8 @@ const Portfolio = () => {
                       />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-white text-sm font-medium truncate">
+                        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+                          <p className="text-white text-xs sm:text-sm font-medium truncate mobile-safe-text">
                             {video.title}
                           </p>
                         </div>
@@ -505,8 +506,8 @@ const Portfolio = () => {
                       
                       {/* Active indicator */}
                       {index === activeVideoIndex && (
-                        <div className="absolute top-2 right-2">
-                          <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                        <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-500 rounded-full animate-pulse"></div>
                         </div>
                       )}
                     </div>
@@ -521,12 +522,12 @@ const Portfolio = () => {
         {projects.length > 0 && videosLoaded && !loadingError && (
           <div className="mb-12">
             <Tabs defaultValue="all" onValueChange={setActiveFilter}>
-              <TabsList className="w-full flex justify-center flex-wrap mb-8 bg-transparent">
+              <TabsList className="w-full flex justify-center flex-wrap mb-6 sm:mb-8 bg-transparent gap-2 sm:gap-0">
                 {categories.map((cat) => (
                   <TabsTrigger 
                     key={cat.id} 
                     value={cat.id}
-                    className="px-6 py-2 rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
+                    className="px-3 py-2 sm:px-4 sm:py-2 md:px-6 text-xs sm:text-sm rounded-full data-[state=active]:bg-doodle-purple data-[state=active]:text-white"
                   >
                     {cat.name}
                   </TabsTrigger>
@@ -535,7 +536,7 @@ const Portfolio = () => {
               
               {categories.map((cat) => (
                 <TabsContent key={cat.id} value={cat.id} className="mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     {(cat.id === 'all' ? projects : projects.filter(p => p.category === cat.id)).map((project) => (
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
                         <video
@@ -559,16 +560,16 @@ const Portfolio = () => {
                         />
                         
                         {/* Overlay with information */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <h3 className="text-white text-xl font-bold">{project.title}</h3>
-                          <p className="text-white/70 text-sm mb-4">Client: {project.client}</p>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-3 sm:p-4 md:p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <h3 className="text-white text-sm sm:text-lg md:text-xl font-bold mobile-safe-text">{project.title}</h3>
+                          <p className="text-white/70 text-xs sm:text-sm mb-2 sm:mb-4 mobile-safe-text">Client: {project.client}</p>
                           
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 sm:gap-2 flex-wrap">
                             {/* Play button */}
                             <Dialog>
                               <DialogTrigger asChild>
-                                <button className="w-12 h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
-                                  <Play size={20} />
+                                <button className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-doodle-purple text-white flex items-center justify-center">
+                                  <Play size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
                                 </button>
                               </DialogTrigger>
                               <DialogContent className="max-w-4xl">
@@ -590,17 +591,18 @@ const Portfolio = () => {
                             
                             {/* Featured toggle button */}
                             <button 
-                              className={`px-3 py-1.5 ${project.featured ? 'bg-doodle-purple text-white' : 'bg-white/20 text-white'} text-sm rounded-full hover:bg-doodle-purple/70 hover:text-white`}
+                              className={`px-2 py-1 sm:px-3 sm:py-1.5 ${project.featured ? 'bg-doodle-purple text-white' : 'bg-white/20 text-white'} text-xs sm:text-sm rounded-full hover:bg-doodle-purple/70 hover:text-white`}
                               onClick={() => toggleFeaturedVideo(project.id)}
                             >
-                              {project.featured ? 'Featured' : 'Feature Video'}
+                              {project.featured ? 'Featured' : 'Feature'}
                             </button>
                             
                             {/* Category selector */}
                             <Dialog>
                               <DialogTrigger asChild>
-                                <button className="px-3 py-1.5 bg-white/20 text-white text-sm rounded-full hover:bg-white/30">
-                                  Change Category
+                                <button className="px-2 py-1 sm:px-3 sm:py-1.5 bg-white/20 text-white text-xs sm:text-sm rounded-full hover:bg-white/30">
+                                  <span className="hidden sm:inline">Change Category</span>
+                                  <span className="sm:hidden">Category</span>
                                 </button>
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-xs">
@@ -628,7 +630,7 @@ const Portfolio = () => {
                         
                         {/* Featured badge */}
                         {project.featured && (
-                          <div className="absolute top-2 right-2 bg-doodle-purple text-white text-xs px-2 py-1 rounded-full">
+                          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-doodle-purple text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full">
                             Featured
                           </div>
                         )}
@@ -636,7 +638,7 @@ const Portfolio = () => {
                     ))}
                     
                     {(cat.id === 'all' ? projects.length === 0 : projects.filter(p => p.category === cat.id).length === 0) && (
-                      <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
+                      <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-8 sm:py-10">
                         <p>No videos in this category.</p>
                       </div>
                     )}
@@ -656,6 +658,38 @@ const Portfolio = () => {
         }
         .hover\\:scale-102:hover {
           transform: scale(1.02);
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Mobile video improvements */
+        @media (max-width: 640px) {
+          video {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+          }
+          
+          .mobile-safe-text {
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+            font-weight: 700;
+          }
+        }
+        
+        /* Touch improvements for mobile */
+        @media (hover: none) and (pointer: coarse) {
+          .group:hover .opacity-0 {
+            opacity: 1;
+          }
+          
+          .group .opacity-0 {
+            opacity: 0.8;
+          }
         }
         `}
       </style>
