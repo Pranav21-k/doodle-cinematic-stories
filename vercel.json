@@ -27,7 +27,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(mp4|webm|ogg|avi|mov))",
+      "source": "/(.*).mp4",
       "headers": [
         {
           "key": "Cache-Control",
@@ -38,12 +38,6 @@
           "value": "*"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/modelling/(.*)",
-      "destination": "/modelling/$1"
     }
   ],
   "public": true,
