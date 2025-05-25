@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "src/main.tsx": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/modelling/(.*)",
@@ -39,8 +34,5 @@
         }
       ]
     }
-  ],
-  "public": true,
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 } 
