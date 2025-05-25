@@ -86,12 +86,21 @@ const Portfolio = () => {
     'p5.mp4', 'p6.mp4', 't1.mp4', 't2.mp4', 't3.mp4'
   ];
 
+  // Fallback placeholder images for when videos can't load
+  const placeholderImages = [
+    'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80', // Video production
+    'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80', // Fashion
+    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80', // Fitness
+    'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80', // Events
+    'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&q=80', // Brand
+  ];
+
   const DEFAULT_PROJECTS: Project[] = modellingFiles.map((file, idx) => ({
     id: idx + 1,
     title: `Video ${idx + 1}`,
     client: 'Doodle',
     category: 'fashion',
-    thumbnail: `/modelling/${file}`,
+    thumbnail: placeholderImages[idx % placeholderImages.length],
     videoUrl: `/modelling/${file}`,
     featured: idx < 4, // first few highlighted in carousel
   }));
@@ -400,15 +409,30 @@ const Portfolio = () => {
                               }}
                               onError={(e) => {
                                 console.error(`Error loading thumbnail video ${project.id}:`, e);
-                                // Fallback: try to show a poster image
+                                // Fallback: show placeholder image
                                 const videoEl = e.target as HTMLVideoElement;
-                                if (videoEl && project.thumbnail) {
+                                const container = videoEl.parentElement;
+                                if (container) {
+                                  // Hide the video and show placeholder
+                                  videoEl.style.display = 'none';
                                   const img = document.createElement('img');
                                   img.src = project.thumbnail;
                                   img.className = 'w-full h-full object-cover';
                                   img.alt = project.title;
-                                  videoEl.parentElement?.appendChild(img);
-                                  videoEl.style.display = 'none';
+                                  img.style.opacity = '1';
+                                  container.appendChild(img);
+                                  
+                                  // Add a play overlay to indicate it's a video
+                                  const overlay = document.createElement('div');
+                                  overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
+                                  overlay.innerHTML = `
+                                    <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                      <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                      </svg>
+                                    </div>
+                                  `;
+                                  container.appendChild(overlay);
                                 }
                               }}
                             />
@@ -577,15 +601,30 @@ const Portfolio = () => {
                         }}
                         onError={(e) => {
                           console.error(`Error loading thumbnail video ${video.id}:`, e);
-                          // Fallback: try to show a poster image
+                          // Fallback: show placeholder image
                           const videoEl = e.target as HTMLVideoElement;
-                          if (videoEl && video.thumbnail) {
+                          const container = videoEl.parentElement;
+                          if (container) {
+                            // Hide the video and show placeholder
+                            videoEl.style.display = 'none';
                             const img = document.createElement('img');
                             img.src = video.thumbnail;
                             img.className = 'w-full h-full object-cover';
                             img.alt = video.title;
-                            videoEl.parentElement?.appendChild(img);
-                            videoEl.style.display = 'none';
+                            img.style.opacity = '1';
+                            container.appendChild(img);
+                            
+                            // Add a play overlay to indicate it's a video
+                            const overlay = document.createElement('div');
+                            overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
+                            overlay.innerHTML = `
+                              <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                              </div>
+                            `;
+                            container.appendChild(overlay);
                           }
                         }}
                       />
@@ -661,15 +700,30 @@ const Portfolio = () => {
                           }}
                           onError={(e) => {
                             console.error(`Error loading grid video ${project.id}:`, e);
-                            // Fallback: try to show a poster image
+                            // Fallback: show placeholder image
                             const videoEl = e.target as HTMLVideoElement;
-                            if (videoEl && project.thumbnail) {
+                            const container = videoEl.parentElement;
+                            if (container) {
+                              // Hide the video and show placeholder
+                              videoEl.style.display = 'none';
                               const img = document.createElement('img');
                               img.src = project.thumbnail;
                               img.className = 'w-full h-full object-cover';
                               img.alt = project.title;
-                              videoEl.parentElement?.appendChild(img);
-                              videoEl.style.display = 'none';
+                              img.style.opacity = '1';
+                              container.appendChild(img);
+                              
+                              // Add a play overlay to indicate it's a video
+                              const overlay = document.createElement('div');
+                              overlay.className = 'absolute inset-0 flex items-center justify-center bg-black/20';
+                              overlay.innerHTML = `
+                                <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                  <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                </div>
+                              `;
+                              container.appendChild(overlay);
                             }
                           }}
                         />
