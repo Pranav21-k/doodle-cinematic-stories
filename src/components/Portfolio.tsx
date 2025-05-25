@@ -345,9 +345,30 @@ const Portfolio = () => {
                           <div className="relative w-24 h-16 rounded overflow-hidden">
                             <video
                               src={project.videoUrl}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover mobile-video"
                               muted
                               preload="metadata"
+                              poster={project.thumbnail || project.videoUrl}
+                              playsInline
+                              webkit-playsinline="true"
+                              onError={(e) => {
+                                console.error(`Error loading thumbnail video ${project.id}:`, e);
+                                // Fallback: try to show a poster image
+                                const videoEl = e.target as HTMLVideoElement;
+                                if (videoEl && project.thumbnail) {
+                                  const img = document.createElement('img');
+                                  img.src = project.thumbnail;
+                                  img.className = 'w-full h-full object-cover';
+                                  img.alt = project.title;
+                                  videoEl.parentElement?.appendChild(img);
+                                  videoEl.style.display = 'none';
+                                }
+                              }}
+                              onLoadedMetadata={(e) => {
+                                // Ensure video is visible once loaded
+                                const videoEl = e.target as HTMLVideoElement;
+                                videoEl.style.opacity = '1';
+                              }}
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
@@ -437,12 +458,14 @@ const Portfolio = () => {
                 <video
                   key={`feature-${showcaseVideos[activeVideoIndex]?.id}-${activeVideoIndex}`}
                   src={showcaseVideos[activeVideoIndex].videoUrl}
-                  className="w-full h-full object-cover transition-all duration-700"
+                  className="w-full h-full object-cover transition-all duration-700 mobile-video"
                   autoPlay
                   muted
                   loop
                   playsInline
+                  webkit-playsinline="true"
                   preload="metadata"
+                  poster={showcaseVideos[activeVideoIndex].thumbnail || showcaseVideos[activeVideoIndex].videoUrl}
                   onError={(e) => {
                     console.error('Error loading feature video:', e);
                   }}
@@ -488,11 +511,29 @@ const Portfolio = () => {
                     >
                       <video 
                         src={video.videoUrl} 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover mobile-video"
                         muted
                         preload="metadata"
+                        poster={video.thumbnail || video.videoUrl}
+                        playsInline
+                        webkit-playsinline="true"
                         onError={(e) => {
                           console.error(`Error loading thumbnail video ${video.id}:`, e);
+                          // Fallback: try to show a poster image
+                          const videoEl = e.target as HTMLVideoElement;
+                          if (videoEl && video.thumbnail) {
+                            const img = document.createElement('img');
+                            img.src = video.thumbnail;
+                            img.className = 'w-full h-full object-cover';
+                            img.alt = video.title;
+                            videoEl.parentElement?.appendChild(img);
+                            videoEl.style.display = 'none';
+                          }
+                        }}
+                        onLoadedMetadata={(e) => {
+                          // Ensure video is visible once loaded
+                          const videoEl = e.target as HTMLVideoElement;
+                          videoEl.style.opacity = '1';
                         }}
                       />
                       
@@ -541,11 +582,13 @@ const Portfolio = () => {
                       <Card key={`project-${project.id}`} className="group relative overflow-hidden rounded-lg aspect-video card-hover animate-zoom-in border-0 shadow-lg">
                         <video
                           src={project.videoUrl}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover mobile-video"
                           muted
                           loop
                           playsInline
+                          webkit-playsinline="true"
                           preload="metadata"
+                          poster={project.thumbnail || project.videoUrl}
                           onMouseOver={(e) => {
                             const video = e.target as HTMLVideoElement;
                             video.play().catch(() => {
@@ -556,6 +599,19 @@ const Portfolio = () => {
                             const video = e.target as HTMLVideoElement;
                             video.pause();
                             video.currentTime = 0;
+                          }}
+                          onError={(e) => {
+                            console.error(`Error loading grid video ${project.id}:`, e);
+                            // Fallback: try to show a poster image
+                            const videoEl = e.target as HTMLVideoElement;
+                            if (videoEl && project.thumbnail) {
+                              const img = document.createElement('img');
+                              img.src = project.thumbnail;
+                              img.className = 'w-full h-full object-cover';
+                              img.alt = project.title;
+                              videoEl.parentElement?.appendChild(img);
+                              videoEl.style.display = 'none';
+                            }
                           }}
                         />
                         
@@ -669,15 +725,42 @@ const Portfolio = () => {
         
         /* Mobile video improvements */
         @media (max-width: 640px) {
-          video {
+          video, .mobile-video {
             object-fit: cover;
             width: 100%;
             height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+          
+          video[poster], .mobile-video[poster] {
+            opacity: 1;
+          }
+          
+          video:not([poster]), .mobile-video:not([poster]) {
+            background: linear-gradient(45deg, #7c3aed, #a855f7);
+          }
+          
+          /* Ensure videos load properly on mobile */
+          .mobile-video {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            will-change: transform;
           }
           
           .mobile-safe-text {
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
             font-weight: 700;
+          }
+        }
+        
+        /* iOS specific video fixes */
+        @supports (-webkit-touch-callout: none) {
+          .mobile-video {
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
           }
         }
         
@@ -689,6 +772,11 @@ const Portfolio = () => {
           
           .group .opacity-0 {
             opacity: 0.8;
+          }
+          
+          /* Better video visibility on touch devices */
+          .mobile-video {
+            opacity: 1 !important;
           }
         }
         `}
