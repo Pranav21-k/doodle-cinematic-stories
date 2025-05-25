@@ -513,6 +513,31 @@ const Portfolio = () => {
             Watch and explore videos in our portfolio.
           </p>
           
+          {/* Debug: Simple video test */}
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg max-w-md mx-auto">
+            <p className="text-sm text-gray-600 mb-2">Video Test:</p>
+            <video 
+              src="/modelling/01.mp4" 
+              className="w-full h-32 object-cover rounded"
+              controls
+              muted
+              preload="auto"
+              onLoadStart={() => console.log('🎬 Test video loading started')}
+              onLoadedData={() => console.log('✅ Test video loaded successfully')}
+              onCanPlay={() => console.log('▶️ Test video can play')}
+              onError={(e) => console.error('❌ Test video error:', e)}
+            />
+            <p className="text-xs text-gray-500 mt-1">Direct video test - check console for logs</p>
+            
+            {/* Debug info */}
+            <div className="mt-2 text-xs text-gray-600">
+              <p>Projects loaded: {projects.length}</p>
+              <p>Videos loaded: {videosLoaded ? 'Yes' : 'No'}</p>
+              <p>First video URL: {projects[0]?.videoUrl || 'None'}</p>
+              <p>Showcase videos: {showcaseVideos.length}</p>
+            </div>
+          </div>
+          
           {/* Manage Featured Videos Button */}
           {projects.length > 0 && (
             <div className="mt-8">
