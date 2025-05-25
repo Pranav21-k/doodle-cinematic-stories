@@ -59,65 +59,53 @@ const VideoWithFallback: React.FC<{
   onMouseOver?: () => void;
   onMouseOut?: () => void;
 }> = ({ videoUrl, thumbnail, title, className = "", autoPlay = false, muted = true, loop = false, controls = false, onMouseOver, onMouseOut }) => {
-  const [useVideo, setUseVideo] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Force video to be visible after a timeout
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!videoLoaded && useVideo) {
-        console.log(`Video timeout reached, falling back to image: ${videoUrl}`);
-        setUseVideo(false);
-        setIsLoading(false);
-      }
-    }, 5000); // 5 second timeout
-
-    return () => clearTimeout(timer);
-  }, [videoLoaded, useVideo, videoUrl]);
-
-  // Initialize video when component mounts
+  // Try to load video, but always show thumbnail first
   useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-      // Try to load the video
       video.load();
     }
   }, [videoUrl]);
 
   const handleVideoError = () => {
-    console.log(`Video failed to load: ${videoUrl}, falling back to image`);
-    setUseVideo(false);
-    setIsLoading(false);
-    setVideoLoaded(false);
+    console.log(`Video failed to load: ${videoUrl}`);
+    setVideoError(true);
+    setShowVideo(false);
   };
 
-  const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+  const handleVideoCanPlay = () => {
     console.log(`Video loaded successfully: ${videoUrl}`);
-    const video = e.target as HTMLVideoElement;
-    setVideoLoaded(true);
-    setIsLoading(false);
+    setVideoError(false);
+    // Only show video on hover or if autoplay is enabled
+    if (autoPlay) {
+      setShowVideo(true);
+    }
   };
 
-  const handleVideoLoadStart = () => {
-    console.log(`Video loading started: ${videoUrl}`);
-    setIsLoading(true);
-    setVideoLoaded(false);
+  const handleMouseOver = () => {
+    if (!videoError && videoRef.current) {
+      setShowVideo(true);
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {
+        // Ignore autoplay errors
+      });
+    }
+    if (onMouseOver) onMouseOver();
   };
 
-  const handleVideoCanPlay = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.log(`Video can play: ${videoUrl}`);
-    const video = e.target as HTMLVideoElement;
-    setVideoLoaded(true);
-    setIsLoading(false);
-  };
-
-  const handleVideoLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.log(`Video metadata loaded: ${videoUrl}`);
-    const video = e.target as HTMLVideoElement;
-    setVideoLoaded(true);
-    setIsLoading(false);
+  const handleMouseOut = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    if (!autoPlay) {
+      setShowVideo(false);
+    }
+    if (onMouseOut) onMouseOut();
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -125,78 +113,55 @@ const VideoWithFallback: React.FC<{
     img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
   };
 
-  if (useVideo) {
-    return (
-      <div className="relative w-full h-full">
-        {/* Show thumbnail image as background while video loads */}
-        <img
-          src={thumbnail}
-          alt={title}
-          className={`absolute inset-0 w-full h-full object-cover ${videoLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500`}
-          onError={handleImageError}
-        />
-        
-        {(isLoading || !videoLoaded) && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-20">
-            <div className="w-8 h-8 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
-          </div>
-        )}
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className={`relative z-10 w-full h-full object-cover ${className} ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-          autoPlay={autoPlay}
-          muted={muted}
-          loop={loop}
-          controls={controls}
-          playsInline
-          preload="metadata"
-          onLoadStart={handleVideoLoadStart}
-          onLoadedData={handleVideoLoad}
-          onLoadedMetadata={handleVideoLoadedMetadata}
-          onCanPlay={handleVideoCanPlay}
-          onError={handleVideoError}
-          onMouseOver={onMouseOver}
-          onMouseOut={onMouseOut}
-        />
-      </div>
-    );
-  }
-
-  // Fallback: show different content based on whether it's a dialog or preview
-  if (controls) {
-    // Dialog fallback - show informative message
-    return (
-      <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
-        <div className="text-center p-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-            <Play size={32} className="text-white ml-1" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-          <p className="text-gray-600 mb-4">Video temporarily unavailable</p>
-          <p className="text-sm text-gray-500">
-            We're working on optimizing video delivery. Please check back soon.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Preview fallback - show image with play overlay
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full group" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>
+      {/* Always show thumbnail as base layer */}
       <img
         src={thumbnail}
         alt={title}
-        className={`w-full h-full object-cover ${className}`}
+        className={`w-full h-full object-cover ${className} ${showVideo ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
         onError={handleImageError}
       />
-      {/* Play overlay to indicate it's a video */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-          <Play size={24} className="text-white ml-1" />
+      
+      {/* Video layer - only visible when showVideo is true */}
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className={`absolute inset-0 w-full h-full object-cover ${className} ${showVideo ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        autoPlay={autoPlay}
+        muted={muted}
+        loop={loop}
+        controls={controls}
+        playsInline
+        preload="metadata"
+        onCanPlay={handleVideoCanPlay}
+        onError={handleVideoError}
+      />
+      
+      {/* Play overlay for non-control videos */}
+      {!controls && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <Play size={24} className="text-white ml-1" />
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* Dialog fallback for controls */}
+      {controls && videoError && (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
+          <div className="text-center p-8">
+            <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
+              <Play size={32} className="text-white ml-1" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+            <p className="text-gray-600 mb-4">Video temporarily unavailable</p>
+            <p className="text-sm text-gray-500">
+              We're working on optimizing video delivery. Please check back soon.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -695,28 +660,6 @@ const Portfolio = () => {
                         thumbnail={video.thumbnail}
                         title={video.title}
                         muted={true}
-                        onMouseOver={() => {
-                          // Play video on hover
-                          const videos = document.querySelectorAll(`video[src="${video.videoUrl}"]`);
-                          videos.forEach(video => {
-                            if (video instanceof HTMLVideoElement) {
-                              video.currentTime = 0;
-                              video.play().catch(() => {
-                                // Ignore autoplay errors
-                              });
-                            }
-                          });
-                        }}
-                        onMouseOut={() => {
-                          // Pause video on mouse out
-                          const videos = document.querySelectorAll(`video[src="${video.videoUrl}"]`);
-                          videos.forEach(video => {
-                            if (video instanceof HTMLVideoElement) {
-                              video.pause();
-                              video.currentTime = 0;
-                            }
-                          });
-                        }}
                       />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
@@ -768,28 +711,6 @@ const Portfolio = () => {
                           title={project.title}
                           muted={true}
                           loop={true}
-                          onMouseOver={() => {
-                            // Play video on hover
-                            const videos = document.querySelectorAll(`video[src="${project.videoUrl}"]`);
-                            videos.forEach(video => {
-                              if (video instanceof HTMLVideoElement) {
-                                video.currentTime = 0;
-                                video.play().catch(() => {
-                                  // Ignore autoplay errors
-                                });
-                              }
-                            });
-                          }}
-                          onMouseOut={() => {
-                            // Pause video on mouse out
-                            const videos = document.querySelectorAll(`video[src="${project.videoUrl}"]`);
-                            videos.forEach(video => {
-                              if (video instanceof HTMLVideoElement) {
-                                video.pause();
-                                video.currentTime = 0;
-                              }
-                            });
-                          }}
                         />
                         
                         {/* Overlay with information */}
