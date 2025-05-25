@@ -1,0 +1,18 @@
+# Don't ignore video files - we want them deployed
+# But ensure they're treated as static assets
+!public/modelling/*.mp4
+
+# Ignore development files
+node_modules
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+*.log
+
+# Ignore build artifacts that aren't needed
+dist
+build
+.next
+.cache 

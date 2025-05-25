@@ -320,13 +320,22 @@ const Portfolio = () => {
     video.preload = 'auto';
     video.src = videoUrl;
     video.muted = true;
+    video.crossOrigin = 'anonymous';
     
     video.addEventListener('canplaythrough', () => {
       setPreloadedVideos(prev => new Set([...prev, videoUrl]));
+      console.log(`✅ Video preloaded successfully: ${videoUrl}`);
     });
     
     video.addEventListener('error', () => {
-      console.warn(`Failed to preload video: ${videoUrl}`);
+      console.error(`❌ Failed to preload video: ${videoUrl}`, video.error);
+      // Try alternative URL format
+      const altUrl = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
+      if (altUrl !== videoUrl) {
+        console.log(`🔄 Trying alternative URL: ${altUrl}`);
+        video.src = altUrl;
+        video.load();
+      }
     });
     
     // Start loading
@@ -503,9 +512,15 @@ const Portfolio = () => {
                     // Video is ready to play smoothly
                     const video = e.target as HTMLVideoElement;
                     video.style.opacity = '1';
+                    console.log(`✅ Feature video loaded: ${showcaseVideos[activeVideoIndex].videoUrl}`);
                   }}
                   onError={(e) => {
-                    console.error('Error loading feature video:', e);
+                    const video = e.target as HTMLVideoElement;
+                    console.error('❌ Error loading feature video:', showcaseVideos[activeVideoIndex].videoUrl, video.error);
+                    // Try to reload with a different approach
+                    setTimeout(() => {
+                      video.load();
+                    }, 1000);
                   }}
                 />
               )}

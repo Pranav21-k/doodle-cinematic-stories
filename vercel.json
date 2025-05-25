@@ -1,0 +1,52 @@
+{
+  "functions": {
+    "src/main.tsx": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/modelling/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, HEAD, OPTIONS"
+        },
+        {
+          "key": "Content-Type",
+          "value": "video/mp4"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(mp4|webm|ogg|avi|mov))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/modelling/(.*)",
+      "destination": "/modelling/$1"
+    }
+  ],
+  "public": true,
+  "cleanUrls": true,
+  "trailingSlash": false
+} 
