@@ -60,29 +60,27 @@ const VideoWithFallback: React.FC<{
   onMouseOut?: () => void;
 }> = ({ videoUrl, thumbnail, title, className = "", autoPlay = false, muted = true, loop = false, controls = false, onMouseOver, onMouseOut }) => {
   const [useVideo, setUseVideo] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Force video to be visible after a timeout
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (videoRef.current && isLoading) {
-        console.log(`Forcing video visibility after timeout: ${videoUrl}`);
-        videoRef.current.style.opacity = '1';
+      if (!videoLoaded && useVideo) {
+        console.log(`Video timeout reached, falling back to image: ${videoUrl}`);
+        setUseVideo(false);
         setIsLoading(false);
       }
-    }, 3000); // 3 second timeout
+    }, 5000); // 5 second timeout
 
     return () => clearTimeout(timer);
-  }, [isLoading, videoUrl]);
+  }, [videoLoaded, useVideo, videoUrl]);
 
-  // Ensure video is visible when component mounts
+  // Initialize video when component mounts
   useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-      // Force video to be visible
-      video.style.opacity = '1';
-      
       // Try to load the video
       video.load();
     }
@@ -92,24 +90,33 @@ const VideoWithFallback: React.FC<{
     console.log(`Video failed to load: ${videoUrl}, falling back to image`);
     setUseVideo(false);
     setIsLoading(false);
+    setVideoLoaded(false);
   };
 
   const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     console.log(`Video loaded successfully: ${videoUrl}`);
     const video = e.target as HTMLVideoElement;
-    video.style.opacity = '1';
+    setVideoLoaded(true);
     setIsLoading(false);
   };
 
   const handleVideoLoadStart = () => {
     console.log(`Video loading started: ${videoUrl}`);
     setIsLoading(true);
+    setVideoLoaded(false);
   };
 
   const handleVideoCanPlay = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     console.log(`Video can play: ${videoUrl}`);
     const video = e.target as HTMLVideoElement;
-    video.style.opacity = '1';
+    setVideoLoaded(true);
+    setIsLoading(false);
+  };
+
+  const handleVideoLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    console.log(`Video metadata loaded: ${videoUrl}`);
+    const video = e.target as HTMLVideoElement;
+    setVideoLoaded(true);
     setIsLoading(false);
   };
 
@@ -121,25 +128,32 @@ const VideoWithFallback: React.FC<{
   if (useVideo) {
     return (
       <div className="relative w-full h-full">
-        {isLoading && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
+        {/* Show thumbnail image as background while video loads */}
+        <img
+          src={thumbnail}
+          alt={title}
+          className={`absolute inset-0 w-full h-full object-cover ${videoLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500`}
+          onError={handleImageError}
+        />
+        
+        {(isLoading || !videoLoaded) && (
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-20">
             <div className="w-8 h-8 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
           </div>
         )}
         <video
           ref={videoRef}
           src={videoUrl}
-          className={`w-full h-full object-cover ${className}`}
-          style={{ opacity: '1' }}
+          className={`relative z-10 w-full h-full object-cover ${className} ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
           autoPlay={autoPlay}
           muted={muted}
           loop={loop}
           controls={controls}
           playsInline
-          preload="auto"
-          poster={thumbnail}
+          preload="metadata"
           onLoadStart={handleVideoLoadStart}
           onLoadedData={handleVideoLoad}
+          onLoadedMetadata={handleVideoLoadedMetadata}
           onCanPlay={handleVideoCanPlay}
           onError={handleVideoError}
           onMouseOver={onMouseOver}
@@ -513,31 +527,6 @@ const Portfolio = () => {
             Watch and explore videos in our portfolio.
           </p>
           
-          {/* Debug: Simple video test */}
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg max-w-md mx-auto">
-            <p className="text-sm text-gray-600 mb-2">Video Test:</p>
-            <video 
-              src="/modelling/01.mp4" 
-              className="w-full h-32 object-cover rounded"
-              controls
-              muted
-              preload="auto"
-              onLoadStart={() => console.log('🎬 Test video loading started')}
-              onLoadedData={() => console.log('✅ Test video loaded successfully')}
-              onCanPlay={() => console.log('▶️ Test video can play')}
-              onError={(e) => console.error('❌ Test video error:', e)}
-            />
-            <p className="text-xs text-gray-500 mt-1">Direct video test - check console for logs</p>
-            
-            {/* Debug info */}
-            <div className="mt-2 text-xs text-gray-600">
-              <p>Projects loaded: {projects.length}</p>
-              <p>Videos loaded: {videosLoaded ? 'Yes' : 'No'}</p>
-              <p>First video URL: {projects[0]?.videoUrl || 'None'}</p>
-              <p>Showcase videos: {showcaseVideos.length}</p>
-            </div>
-          </div>
-          
           {/* Manage Featured Videos Button */}
           {projects.length > 0 && (
             <div className="mt-8">
@@ -657,9 +646,9 @@ const Portfolio = () => {
                   thumbnail={showcaseVideos[activeVideoIndex].thumbnail}
                   title={showcaseVideos[activeVideoIndex].title}
                   className="transition-all duration-700"
-                  autoPlay={true}
+                  autoPlay={false}
                   muted={true}
-                  loop={true}
+                  loop={false}
                   controls={false}
                 />
               )}
@@ -707,10 +696,26 @@ const Portfolio = () => {
                         title={video.title}
                         muted={true}
                         onMouseOver={() => {
-                          // Optional: add hover effects
+                          // Play video on hover
+                          const videos = document.querySelectorAll(`video[src="${video.videoUrl}"]`);
+                          videos.forEach(video => {
+                            if (video instanceof HTMLVideoElement) {
+                              video.currentTime = 0;
+                              video.play().catch(() => {
+                                // Ignore autoplay errors
+                              });
+                            }
+                          });
                         }}
                         onMouseOut={() => {
-                          // Optional: remove hover effects  
+                          // Pause video on mouse out
+                          const videos = document.querySelectorAll(`video[src="${video.videoUrl}"]`);
+                          videos.forEach(video => {
+                            if (video instanceof HTMLVideoElement) {
+                              video.pause();
+                              video.currentTime = 0;
+                            }
+                          });
                         }}
                       />
                       
@@ -764,10 +769,26 @@ const Portfolio = () => {
                           muted={true}
                           loop={true}
                           onMouseOver={() => {
-                            // Video will auto-play on hover if it loads successfully
+                            // Play video on hover
+                            const videos = document.querySelectorAll(`video[src="${project.videoUrl}"]`);
+                            videos.forEach(video => {
+                              if (video instanceof HTMLVideoElement) {
+                                video.currentTime = 0;
+                                video.play().catch(() => {
+                                  // Ignore autoplay errors
+                                });
+                              }
+                            });
                           }}
                           onMouseOut={() => {
-                            // Video will pause on mouse out if it loads successfully
+                            // Pause video on mouse out
+                            const videos = document.querySelectorAll(`video[src="${project.videoUrl}"]`);
+                            videos.forEach(video => {
+                              if (video instanceof HTMLVideoElement) {
+                                video.pause();
+                                video.currentTime = 0;
+                              }
+                            });
                           }}
                         />
                         
