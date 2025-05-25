@@ -60,8 +60,33 @@ const VideoWithFallback: React.FC<{
   onMouseOut?: () => void;
 }> = ({ videoUrl, thumbnail, title, className = "", autoPlay = false, muted = true, loop = false, controls = false, onMouseOver, onMouseOut }) => {
   const [useVideo, setUseVideo] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Force video to be visible after a timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (videoRef.current && isLoading) {
+        console.log(`Forcing video visibility after timeout: ${videoUrl}`);
+        videoRef.current.style.opacity = '1';
+        setIsLoading(false);
+      }
+    }, 3000); // 3 second timeout
+
+    return () => clearTimeout(timer);
+  }, [isLoading, videoUrl]);
+
+  // Ensure video is visible when component mounts
+  useEffect(() => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      // Force video to be visible
+      video.style.opacity = '1';
+      
+      // Try to load the video
+      video.load();
+    }
+  }, [videoUrl]);
 
   const handleVideoError = () => {
     console.log(`Video failed to load: ${videoUrl}, falling back to image`);
@@ -69,8 +94,22 @@ const VideoWithFallback: React.FC<{
     setIsLoading(false);
   };
 
-  const handleVideoLoad = () => {
+  const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     console.log(`Video loaded successfully: ${videoUrl}`);
+    const video = e.target as HTMLVideoElement;
+    video.style.opacity = '1';
+    setIsLoading(false);
+  };
+
+  const handleVideoLoadStart = () => {
+    console.log(`Video loading started: ${videoUrl}`);
+    setIsLoading(true);
+  };
+
+  const handleVideoCanPlay = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    console.log(`Video can play: ${videoUrl}`);
+    const video = e.target as HTMLVideoElement;
+    video.style.opacity = '1';
     setIsLoading(false);
   };
 
@@ -83,22 +122,25 @@ const VideoWithFallback: React.FC<{
     return (
       <div className="relative w-full h-full">
         {isLoading && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+          <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
             <div className="w-8 h-8 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
           </div>
         )}
         <video
           ref={videoRef}
           src={videoUrl}
-          className={`w-full h-full object-cover ${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+          className={`w-full h-full object-cover ${className}`}
+          style={{ opacity: '1' }}
           autoPlay={autoPlay}
           muted={muted}
           loop={loop}
           controls={controls}
           playsInline
-          preload="metadata"
+          preload="auto"
           poster={thumbnail}
+          onLoadStart={handleVideoLoadStart}
           onLoadedData={handleVideoLoad}
+          onCanPlay={handleVideoCanPlay}
           onError={handleVideoError}
           onMouseOver={onMouseOver}
           onMouseOut={onMouseOut}
