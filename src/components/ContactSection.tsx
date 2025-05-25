@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,10 +103,10 @@ const ContactSection = () => {
                   <div className="min-w-0 flex-1">
                     <h4 className="font-medium text-gray-800 text-sm md:text-base">Email</h4>
                     <a 
-                      href="mailto:pranav21.kt@gmail.com" 
+                      href="mailto:doodleproduction.nyc@gmail.com" 
                       className="text-purple-600 hover:text-purple-800 transition-colors duration-200 font-medium text-sm md:text-base break-all"
                     >
-                      pranav21.kt@gmail.com
+                      doodleproduction.nyc@gmail.com
                     </a>
                   </div>
                 </div>

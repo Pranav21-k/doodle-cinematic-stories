@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Linkedin, Youtube } from "lucide-react";
 
@@ -64,7 +63,7 @@ const Footer = () => {
             <address className="not-italic">
               <p className="text-gray-400 mb-2">123 Creative Avenue</p>
               <p className="text-gray-400 mb-4">Los Angeles, CA 90012</p>
-              <p className="text-gray-400 mb-2">hello@doodleproduction.com</p>
+              <p className="text-gray-400 mb-2">doodleproduction.nyc@gmail.com</p>
               <p className="text-gray-400">+1 (555) 123-4567</p>
             </address>
           </div>

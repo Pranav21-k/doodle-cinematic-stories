@@ -212,7 +212,16 @@ const AboutUs = () => {
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
               </Button>
-              <Button variant="outline" className="group px-8 py-4 rounded-full font-semibold border-2 border-purple-300 text-purple-700 hover:bg-purple-600 hover:text-white transition-all duration-300 transform hover:scale-105">
+              <Button 
+                variant="outline" 
+                className="group px-8 py-4 rounded-full font-semibold border-2 border-purple-300 text-purple-700 hover:bg-purple-600 hover:text-white transition-all duration-300 transform hover:scale-105"
+                onClick={() => {
+                  const portfolioSection = document.getElementById('portfolio');
+                  if (portfolioSection) {
+                    portfolioSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
                 <span className="flex items-center gap-2">
                   Our Portfolio
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
