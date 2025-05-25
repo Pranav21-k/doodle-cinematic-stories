@@ -59,36 +59,35 @@ const VideoWithFallback: React.FC<{
   onMouseOver?: () => void;
   onMouseOut?: () => void;
 }> = ({ videoUrl, thumbnail, title, className = "", autoPlay = false, muted = true, loop = false, controls = false, onMouseOver, onMouseOut }) => {
-  const [showVideo, setShowVideo] = useState(false);
-  const [videoError, setVideoError] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Try to load video, but always show thumbnail first
+  // Initialize video when component mounts
   useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
       video.load();
+      // Start playing if autoPlay is enabled
+      if (autoPlay) {
+        video.play().catch(() => {
+          // Ignore autoplay errors
+        });
+      }
     }
   }, [videoUrl]);
 
   const handleVideoError = () => {
     console.log(`Video failed to load: ${videoUrl}`);
-    setVideoError(true);
-    setShowVideo(false);
+    setHasError(true);
   };
 
-  const handleVideoCanPlay = () => {
+  const handleVideoLoaded = () => {
     console.log(`Video loaded successfully: ${videoUrl}`);
-    setVideoError(false);
-    // Only show video on hover or if autoplay is enabled
-    if (autoPlay) {
-      setShowVideo(true);
-    }
+    setHasError(false);
   };
 
   const handleMouseOver = () => {
-    if (!videoError && videoRef.current) {
-      setShowVideo(true);
+    if (!hasError && videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {
         // Ignore autoplay errors
@@ -102,9 +101,6 @@ const VideoWithFallback: React.FC<{
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-    if (!autoPlay) {
-      setShowVideo(false);
-    }
     if (onMouseOut) onMouseOut();
   };
 
@@ -113,43 +109,12 @@ const VideoWithFallback: React.FC<{
     img.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80';
   };
 
-  return (
-    <div className="relative w-full h-full group" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>
-      {/* Always show thumbnail as base layer */}
-      <img
-        src={thumbnail}
-        alt={title}
-        className={`w-full h-full object-cover ${className} ${showVideo ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        onError={handleImageError}
-      />
-      
-      {/* Video layer - only visible when showVideo is true */}
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        className={`absolute inset-0 w-full h-full object-cover ${className} ${showVideo ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        autoPlay={autoPlay}
-        muted={muted}
-        loop={loop}
-        controls={controls}
-        playsInline
-        preload="metadata"
-        onCanPlay={handleVideoCanPlay}
-        onError={handleVideoError}
-      />
-      
-      {/* Play overlay for non-control videos */}
-      {!controls && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-            <Play size={24} className="text-white ml-1" />
-          </div>
-        </div>
-      )}
-      
-      {/* Dialog fallback for controls */}
-      {controls && videoError && (
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
+  // If video has error, show fallback
+  if (hasError) {
+    if (controls) {
+      // Dialog fallback - show informative message
+      return (
+        <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center rounded-lg">
           <div className="text-center p-8">
             <div className="w-20 h-20 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
               <Play size={32} className="text-white ml-1" />
@@ -161,7 +126,45 @@ const VideoWithFallback: React.FC<{
             </p>
           </div>
         </div>
-      )}
+      );
+    }
+    
+    // Preview fallback - show image with play overlay
+    return (
+      <div className="relative w-full h-full group">
+        <img
+          src={thumbnail}
+          alt={title}
+          className={`w-full h-full object-cover ${className}`}
+          onError={handleImageError}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <Play size={24} className="text-white ml-1" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show video directly
+  return (
+    <div className="relative w-full h-full" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className={`w-full h-full object-cover ${className}`}
+        autoPlay={autoPlay}
+        muted={muted}
+        loop={loop}
+        controls={controls}
+        playsInline
+        preload="metadata"
+        poster={thumbnail}
+        onLoadedData={handleVideoLoaded}
+        onCanPlay={handleVideoLoaded}
+        onError={handleVideoError}
+      />
     </div>
   );
 };
@@ -518,7 +521,9 @@ const Portfolio = () => {
                               videoUrl={project.videoUrl}
                               thumbnail={project.thumbnail}
                               title={project.title}
+                              autoPlay={true}
                               muted={true}
+                              loop={true}
                             />
                             {project.featured && (
                               <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
@@ -611,9 +616,9 @@ const Portfolio = () => {
                   thumbnail={showcaseVideos[activeVideoIndex].thumbnail}
                   title={showcaseVideos[activeVideoIndex].title}
                   className="transition-all duration-700"
-                  autoPlay={false}
+                  autoPlay={true}
                   muted={true}
-                  loop={false}
+                  loop={true}
                   controls={false}
                 />
               )}
@@ -659,7 +664,9 @@ const Portfolio = () => {
                         videoUrl={video.videoUrl}
                         thumbnail={video.thumbnail}
                         title={video.title}
+                        autoPlay={true}
                         muted={true}
+                        loop={true}
                       />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
@@ -709,6 +716,7 @@ const Portfolio = () => {
                           videoUrl={project.videoUrl}
                           thumbnail={project.thumbnail}
                           title={project.title}
+                          autoPlay={true}
                           muted={true}
                           loop={true}
                         />
