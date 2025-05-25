@@ -62,6 +62,7 @@ const Portfolio = () => {
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [preloadedVideos, setPreloadedVideos] = useState<Set<string>>(new Set());
   
   // In a real application, this would be stored securely on the server
   const ADMIN_PASSWORD = "admin123"; 
@@ -311,6 +312,38 @@ const Portfolio = () => {
     }
   };
 
+  // Preload videos for better performance
+  const preloadVideo = (videoUrl: string) => {
+    if (preloadedVideos.has(videoUrl)) return;
+    
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.src = videoUrl;
+    video.muted = true;
+    
+    video.addEventListener('canplaythrough', () => {
+      setPreloadedVideos(prev => new Set([...prev, videoUrl]));
+    });
+    
+    video.addEventListener('error', () => {
+      console.warn(`Failed to preload video: ${videoUrl}`);
+    });
+    
+    // Start loading
+    video.load();
+  };
+
+  // Preload featured videos when component mounts
+  useEffect(() => {
+    if (showcaseVideos.length > 0) {
+      showcaseVideos.forEach(video => {
+        if (video.videoUrl) {
+          preloadVideo(video.videoUrl);
+        }
+      });
+    }
+  }, [showcaseVideos]);
+
   return (
     <section id="portfolio" className="section-padding bg-white">
       <div className="container mx-auto px-6 md:px-12">
@@ -347,10 +380,15 @@ const Portfolio = () => {
                               src={project.videoUrl}
                               className="w-full h-full object-cover mobile-video"
                               muted
-                              preload="metadata"
+                              preload="auto"
                               poster={project.thumbnail || project.videoUrl}
                               playsInline
                               webkit-playsinline="true"
+                              onLoadedData={(e) => {
+                                // Ensure video is visible once loaded
+                                const videoEl = e.target as HTMLVideoElement;
+                                videoEl.style.opacity = '1';
+                              }}
                               onError={(e) => {
                                 console.error(`Error loading thumbnail video ${project.id}:`, e);
                                 // Fallback: try to show a poster image
@@ -363,11 +401,6 @@ const Portfolio = () => {
                                   videoEl.parentElement?.appendChild(img);
                                   videoEl.style.display = 'none';
                                 }
-                              }}
-                              onLoadedMetadata={(e) => {
-                                // Ensure video is visible once loaded
-                                const videoEl = e.target as HTMLVideoElement;
-                                videoEl.style.opacity = '1';
                               }}
                             />
                             {project.featured && (
@@ -464,8 +497,13 @@ const Portfolio = () => {
                   loop
                   playsInline
                   webkit-playsinline="true"
-                  preload="metadata"
+                  preload="auto"
                   poster={showcaseVideos[activeVideoIndex].thumbnail || showcaseVideos[activeVideoIndex].videoUrl}
+                  onLoadedData={(e) => {
+                    // Video is ready to play smoothly
+                    const video = e.target as HTMLVideoElement;
+                    video.style.opacity = '1';
+                  }}
                   onError={(e) => {
                     console.error('Error loading feature video:', e);
                   }}
@@ -513,10 +551,15 @@ const Portfolio = () => {
                         src={video.videoUrl} 
                         className="w-full h-full object-cover mobile-video"
                         muted
-                        preload="metadata"
+                        preload="auto"
                         poster={video.thumbnail || video.videoUrl}
                         playsInline
                         webkit-playsinline="true"
+                        onLoadedData={(e) => {
+                          // Ensure video is visible once loaded
+                          const videoEl = e.target as HTMLVideoElement;
+                          videoEl.style.opacity = '1';
+                        }}
                         onError={(e) => {
                           console.error(`Error loading thumbnail video ${video.id}:`, e);
                           // Fallback: try to show a poster image
@@ -529,11 +572,6 @@ const Portfolio = () => {
                             videoEl.parentElement?.appendChild(img);
                             videoEl.style.display = 'none';
                           }
-                        }}
-                        onLoadedMetadata={(e) => {
-                          // Ensure video is visible once loaded
-                          const videoEl = e.target as HTMLVideoElement;
-                          videoEl.style.opacity = '1';
                         }}
                       />
                       
@@ -587,18 +625,24 @@ const Portfolio = () => {
                           loop
                           playsInline
                           webkit-playsinline="true"
-                          preload="metadata"
+                          preload="auto"
                           poster={project.thumbnail || project.videoUrl}
                           onMouseOver={(e) => {
                             const video = e.target as HTMLVideoElement;
-                            video.play().catch(() => {
-                              // Ignore autoplay errors
-                            });
+                            setTimeout(() => {
+                              video.play().catch(() => {
+                                // Ignore autoplay errors
+                              });
+                            }, 100);
                           }}
                           onMouseOut={(e) => {
                             const video = e.target as HTMLVideoElement;
                             video.pause();
                             video.currentTime = 0;
+                          }}
+                          onLoadedData={(e) => {
+                            const video = e.target as HTMLVideoElement;
+                            video.style.opacity = '1';
                           }}
                           onError={(e) => {
                             console.error(`Error loading grid video ${project.id}:`, e);
@@ -632,14 +676,52 @@ const Portfolio = () => {
                                 <DialogHeader>
                                   <DialogTitle>{project.title}</DialogTitle>
                                 </DialogHeader>
-                                <div className="aspect-video w-full">
+                                <div className="aspect-video w-full relative">
+                                  {/* Loading overlay */}
+                                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center rounded-lg">
+                                    <div className="flex flex-col items-center gap-3">
+                                      <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                                      <p className="text-gray-600 text-sm">Loading video...</p>
+                                    </div>
+                                  </div>
                                   <video 
                                     src={project.videoUrl} 
                                     controls 
-                                    className="w-full h-full object-contain"
+                                    className="w-full h-full object-contain relative z-10"
                                     autoPlay
                                     playsInline
-                                    preload="metadata"
+                                    preload="auto"
+                                    onLoadStart={() => {
+                                      // Show loading state
+                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
+                                      if (loadingDiv) {
+                                        (loadingDiv as HTMLElement).style.display = 'flex';
+                                      }
+                                    }}
+                                    onCanPlay={() => {
+                                      // Hide loading state when video can play
+                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
+                                      if (loadingDiv) {
+                                        (loadingDiv as HTMLElement).style.display = 'none';
+                                      }
+                                    }}
+                                    onError={(e) => {
+                                      console.error('Error loading dialog video:', e);
+                                      // Hide loading and show error
+                                      const loadingDiv = document.querySelector('.absolute.inset-0.bg-gray-100');
+                                      if (loadingDiv) {
+                                        (loadingDiv as HTMLElement).innerHTML = `
+                                          <div class="flex flex-col items-center gap-3">
+                                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                              </svg>
+                                            </div>
+                                            <p class="text-red-600 text-sm">Error loading video</p>
+                                          </div>
+                                        `;
+                                      }
+                                    }}
                                   />
                                 </div>
                               </DialogContent>
@@ -729,7 +811,7 @@ const Portfolio = () => {
             object-fit: cover;
             width: 100%;
             height: 100%;
-            opacity: 0;
+            opacity: 0.8;
             transition: opacity 0.3s ease;
           }
           
@@ -778,6 +860,39 @@ const Portfolio = () => {
           .mobile-video {
             opacity: 1 !important;
           }
+        }
+        
+        /* Video loading improvements for all devices */
+        video {
+          opacity: 0.8;
+          transition: opacity 0.5s ease-in-out;
+        }
+        
+        video[data-loaded="true"] {
+          opacity: 1;
+        }
+        
+        /* Smooth video transitions */
+        .video-container {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .video-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(45deg, #7c3aed, #a855f7);
+          opacity: 0.1;
+          z-index: 1;
+          transition: opacity 0.3s ease;
+        }
+        
+        .video-container:hover::before {
+          opacity: 0;
         }
         `}
       </style>
